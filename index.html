@@ -1,0 +1,351 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en">
+
+<head>
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+    <title>ORBITAL | Anirudh Chittimilla</title>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@200;300;400;500;600;700&amp;family=Manrope:wght@300;400;500;600&amp;display=swap"
+        rel="stylesheet" />
+    <link
+        href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
+        rel="stylesheet" />
+    <link href="style.css" rel="stylesheet" />
+    <script src="script.js"></script>
+</head>
+
+<body class="bg-background text-on-surface font-body selection:bg-primary/30 antialiased overflow-x-hidden">
+    <div id="page-content">
+        <!-- Grain Texture Overlay -->
+        <div class="fixed inset-0 z-[100] grain-overlay"></div>
+        <!-- Ambient Orbital Glows -->
+        <div class="fixed top-[-10%] left-[-10%] w-[500px] h-[500px] bg-primary/10 rounded-full ambient-glow z-0"></div>
+        <div class="fixed bottom-[-10%] right-[-10%] w-[600px] h-[600px] bg-secondary/5 rounded-full ambient-glow z-0">
+        </div>
+        <div class="fixed top-[20%] right-[15%] w-[300px] h-[300px] bg-tertiary/10 rounded-full ambient-glow z-0"></div>
+        <!-- TopNavBar -->
+        <nav
+            class="fixed top-0 w-full z-50 bg-transparent backdrop-blur-md border-b border-[#484848]/20 shadow-[0_0_40px_rgba(255,138,122,0.1)]">
+            <div class="flex justify-between items-center px-8 py-6 max-w-[1440px] mx-auto">
+                <div
+                    class="text-xl font-light tracking-[0.2em] text-transparent bg-clip-text bg-gradient-to-r from-[#f3a77d] via-[#ff8a7a] to-[#c0ee91] font-headline">
+                    AC
+                </div>
+                <div
+                    class="hidden md:flex items-center gap-10 font-headline font-light tracking-wide uppercase text-[10px] md:text-xs">
+                    <a class="text-[#ff8a7a] font-medium border-b border-[#ff8a7a] pb-1" href="index.html">Home</a>
+                    <a class="text-[#acabaa] hover:text-[#ff8a7a] transition-colors duration-300"
+                        href="about.html">About</a>
+                    <a class="text-[#acabaa] hover:text-[#ff8a7a] transition-colors duration-300"
+                        href="skills.html">Skills</a>
+                    <a class="text-[#acabaa] hover:text-[#ff8a7a] transition-colors duration-300"
+                        href="projects.html">Projects</a>
+                    <a class="text-[#acabaa] hover:text-[#ff8a7a] transition-colors duration-300"
+                        href="contact.html">Contact</a>
+                </div>
+                <a href="contact.html">
+                    <button
+                        class="bg-transparent border border-outline-variant/30 px-6 py-2 rounded-full text-[10px] uppercase tracking-widest text-[#ff8a7a] hover:shadow-[0_0_15px_-2px_#ff8a7a] hover:border-[#ff8a7a] transition-all duration-300 scale-95 active:scale-90 font-headline">
+                        Hire Me
+                    </button>
+                </a>
+                <button id="menu-btn" class="md:hidden text-[#ff8a7a]">
+                    <span class="material-symbols-outlined text-3xl">menu</span>
+                </button>
+        </nav>
+        <!-- Live Time Component -->
+        <div class="fixed top-28 right-8 md:right-16 lg:right-24 z-40">
+            <div
+                class="bg-surface-container/40 backdrop-blur-sm px-5 py-3 rounded-xl border border-outline-variant/10 flex flex-col items-end shadow-lg min-w-[140px]">
+                <div class="flex items-center gap-3 mb-1.5">
+                    <span id="live-time"
+                        class="text-xs md:text-sm font-headline font-bold text-on-surface tracking-widest">--:--
+                        --</span>
+                    <div class="relative flex h-2 w-2">
+                        <span
+                            class="animate-ping absolute inline-flex h-full w-full rounded-full bg-secondary opacity-75"></span>
+                        <span class="relative inline-flex rounded-full h-2 w-2 bg-secondary"></span>
+                    </div>
+                </div>
+                <span id="live-date"
+                    class="text-[10px] font-headline font-light tracking-[0.2em] text-on-surface-variant uppercase">---
+                    --,
+                    ----</span>
+            </div>
+        </div>
+        <canvas id="particle-bg"></canvas>
+        <!-- Main Hero Canvas -->
+        <main class="relative min-h-screen flex items-center pt-24 px-8 md:px-16 lg:px-24 max-w-[1440px] mx-auto z-10">
+            <div class="flex flex-col lg:grid lg:grid-cols-12 gap-8 lg:gap-12 items-center w-full">
+
+                <!-- BLOCK 1 (mobile order 1, desktop: left col top) — Heading + subtitle -->
+                <div class="lg:col-span-6 order-1 lg:order-1 space-y-2 text-center lg:text-left w-full">
+                    <span
+                        class="label-md uppercase tracking-[0.2em] text-secondary font-headline text-[10px] md:text-xs">Building
+                        Digital Experiences</span>
+                    <h1
+                        class="text-5xl md:text-7xl lg:text-8xl font-headline font-light tracking-tight signature-gradient leading-none">
+                        ANIRUDH CHITTIMILLA
+                    </h1>
+                </div>
+
+                <!-- BLOCK 2 (mobile order 2, desktop: right col spanning full height) — Image -->
+                <div class="lg:col-span-6 lg:row-span-2 home-right lg:justify-end lg:-mt-24 order-2 lg:order-2 w-full">
+                    <div class="home-image-wrap mx-auto">
+                        <div class="home-image-bg"></div>
+                        <img alt="Professional portrait of Anirudh Chittimilla"
+                            src="https://lh3.googleusercontent.com/aida/ADBb0ugoviV_kiP0rbRDduZISG_F8TU8CO7TsCNbHOlntpGkbJiflTiqm1bPpvTYmzn5iNfmzRWwOoNieL4AmXFcjG4dSejzSoYFrvtP_oAX7C_cnSYCcMTGCycsDy_NmVrnpAwCTafMDfMWOVwkg0WgP23kpbAXR3JgJ58YKoOLjLPt84M5OoSDDAZI-n-dljKPxu-pkjvl1MJglcjgz5Lv-dbGyYRAtTYCekXZmYg6mGAanlo0Ga2c096TV5aPeksgQ3jHRHhQyGHrI0o" />
+
+                        <!-- Decorative Orbital Element -->
+                        <div
+                            class="absolute -bottom-8 -left-8 w-32 h-32 border-l border-b border-primary/20 rounded-bl-3xl z-10">
+                        </div>
+                        <div
+                            class="absolute -top-8 -right-8 w-32 h-32 border-r border-t border-secondary/20 rounded-tr-3xl z-10">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- BLOCK 3 (mobile order 3, desktop: left col bottom) — Description + Buttons -->
+                <div class="lg:col-span-6 order-3 lg:order-3 space-y-8 text-center lg:text-left w-full">
+                    <div class="space-y-4 max-w-2xl mx-auto lg:mx-0">
+                        <div class="flex items-center gap-3 justify-center lg:justify-start">
+                            <span class="w-8 h-[1px] bg-outline-variant/40"></span>
+                            <p class="text-sm md:text-base font-medium text-on-surface-variant font-body">B.Tech Student
+                                |
+                                Developer | Problem Solver</p>
+                        </div>
+                        <p class="text-lg md:text-xl text-on-surface/80 font-light leading-relaxed">
+                            Passionate developer focused on building modern, efficient, and scalable digital solutions.
+                            I
+                            enjoy transforming ideas into real-world applications through clean code, creative design,
+                            and
+                            continuous learning.
+                        </p>
+                        <div
+                            class="flex items-center gap-2 text-primary font-headline font-light italic text-sm tracking-wide justify-center lg:justify-start">
+                            <span class="material-symbols-outlined text-xs">keyboard_arrow_right</span>
+                            <span>Explore My Portfolio</span>
+                        </div>
+                    </div>
+                    <div class="flex flex-wrap gap-6 pt-4 justify-center lg:justify-start">
+                        <!-- View Projects Button -->
+                        <a href="projects.html" class="px-8 py-4 bg-transparent rounded-full 
+                        border border-outline-variant/30 
+                        text-on-surface font-headline uppercase text-xs tracking-widest
+
+                        hover:border-primary 
+                        hover:text-primary
+                        hover:shadow-[0_0_15px_-2px_#ff8e7f] 
+
+                        transition-all duration-300 
+                        scale-95 active:scale-90 inline-block">
+                            View Projects
+                        </a>
+
+                        <!-- Contact Button -->
+                        <a href="contact.html" class="px-8 py-4 bg-transparent rounded-full 
+                        border border-outline-variant/30 
+                        text-on-surface font-headline uppercase text-xs tracking-widest
+
+                        hover:border-secondary 
+                        hover:text-secondary
+                        hover:shadow-[0_0_15px_-2px_#c0ee91] 
+
+                        transition-all duration-300 
+                        scale-95 active:scale-90 inline-block">
+                            Contact Me
+                        </a>
+                    </div>
+                </div>
+
+            </div>
+        </main>
+        <!-- Social Rail (HUD Style) -->
+        <div class="fixed left-8 bottom-0 hidden xl:flex flex-col items-center gap-6 pb-12 z-50">
+            <a class="group flex flex-col items-center gap-1 text-[#acabaa] hover:text-primary transition-all duration-300"
+                href="https://github.com/chittimillaanirudh-png" target="_blank">
+                <span
+                    class="text-[9px] font-headline uppercase tracking-[0.2em] [writing-mode:vertical-lr] rotate-180 mb-4 opacity-50">GitHub</span>
+                <span class="material-symbols-outlined text-lg">code</span>
+            </a>
+            <a class="group flex flex-col items-center gap-1 text-[#acabaa] hover:text-secondary transition-all duration-300"
+                href="https://www.linkedin.com/in/anirudh-chittimilla-a74360341" target="_blank">
+                <span
+                    class="text-[9px] font-headline uppercase tracking-[0.2em] [writing-mode:vertical-lr] rotate-180 mb-4 opacity-50">LinkedIn</span>
+                <span class="material-symbols-outlined text-lg">link</span>
+            </a>
+            <a class="group flex flex-col items-center gap-1 text-[#acabaa] hover:text-tertiary transition-all duration-300"
+                href="https://www.instagram.com/ch_anirudh37_official" target="_blank">
+                <span
+                    class="text-[9px] font-headline uppercase tracking-[0.2em] [writing-mode:vertical-lr] rotate-180 mb-4 opacity-50">Instagram</span>
+                <span class="material-symbols-outlined text-lg">photo_camera</span>
+            </a>
+            <div class="w-[1px] h-24 bg-outline-variant/30 mt-4"></div>
+        </div>
+        <!-- Footer -->
+        <footer class="w-full py-12 px-8 bg-[#131313] relative z-10">
+            <div class="max-w-[1440px] mx-auto flex flex-col md:flex-row justify-between items-center gap-6">
+                <div class="flex flex-col items-center md:items-start gap-2">
+                    <span class="font-headline font-light tracking-widest text-[#ff8a7a] text-xs uppercase">Building the
+                        future with code</span>
+                    <span class="text-[#acabaa] text-[10px] tracking-widest uppercase">© 2026 ANIRUDH CHITTIMILLA • ALL
+                        RIGHTS RESERVED</span>
+                </div>
+                <div class="flex gap-8">
+                    <a class="font-headline text-sm tracking-tighter text-[#acabaa] hover:text-[#c0ee91] underline-offset-8 hover:underline decoration-[#c0ee91] transition-all duration-500"
+                        href="https://www.instagram.com/ch_anirudh37_official" target="_blank">Instagram</a>
+                    <a class="font-headline text-sm tracking-tighter text-[#acabaa] hover:text-[#c0ee91] underline-offset-8 hover:underline decoration-[#c0ee91] transition-all duration-500"
+                        href="https://www.linkedin.com/in/anirudh-chittimilla-a74360341" target="_blank">LinkedIn</a>
+                    <a class="font-headline text-sm tracking-tighter text-[#acabaa] hover:text-[#c0ee91] underline-offset-8 hover:underline decoration-[#c0ee91] transition-all duration-500"
+                        href="https://github.com/chittimillaanirudh-png" target="_blank">GitHub</a>
+                </div>
+            </div>
+        </footer>
+        <!-- Cinematic Single-pass Loading Screen -->
+        <div class="fixed inset-0 z-[200] bg-[#0e0e0e] flex flex-col items-center justify-center overflow-hidden transition-opacity duration-1000"
+            id="loading-screen">
+            <canvas id="loading-particles" class="absolute inset-0 z-[1] pointer-events-none"></canvas>
+            <!-- Soft Ambient Spotlight -->
+            <div class="absolute inset-0 z-0 opacity-40 mix-blend-screen pointer-events-none">
+                <div
+                    class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-[radial-gradient(circle,rgba(255,142,127,0.06)_0%,transparent_60%)]">
+                </div>
+                <div
+                    class="absolute top-[40%] left-[55%] -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-[radial-gradient(circle,rgba(192,238,145,0.04)_0%,transparent_60%)]">
+                </div>
+            </div>
+
+            <div class="absolute inset-0 z-0 pointer-events-none opacity-40">
+
+                <div class="absolute top-[35%] left-[25%] w-[2px] h-[2px] bg-[#ff8e7f] rounded-full blur-[2px]"></div>
+
+                <div class="absolute top-[65%] left-[30%] w-[2px] h-[2px] bg-[#c0ee91] rounded-full blur-[2px]"></div>
+
+                <div class="absolute top-[45%] right-[25%] w-[2px] h-[2px] bg-[#ff8e7f] rounded-full blur-[2px]"></div>
+
+                <div class="absolute top-[60%] right-[32%] w-[2px] h-[2px] bg-[#c0ee91] rounded-full blur-[2px]"></div>
+
+            </div>
+            <!-- Centered Branding -->
+            <div class="relative z-10 space-y-6 text-center pt-8">
+                <h2 class="text-2xl md:text-3xl font-headline font-light tracking-[0.4em] text-transparent bg-clip-text bg-gradient-to-r from-[#f3a77d] via-[#ff8a7a] to-[#c0ee91] h-10 uppercase"
+                    id="typing-name">
+                </h2>
+                <p class="text-[10px] md:text-xs font-headline tracking-[0.3em] text-on-surface-variant uppercase opacity-0"
+                    id="loading-sub">
+                    Explore My Portfolio
+                </p>
+                <div
+                    class="absolute bottom-[-30px] left-1/2 -translate-x-1/2 w-48 h-[1px] bg-outline-variant/10 overflow-hidden">
+                    <div
+                        class="h-full bg-gradient-to-r from-[#c0ee91] to-[#ff8e7f] w-0 animate-[loading-bar_3.5s_cubic-bezier(0.4,0,0.2,1)_forwards]">
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <style>
+            @keyframes loading-bar {
+                0% {
+                    width: 0;
+                }
+
+                100% {
+                    width: 100%;
+                }
+            }
+
+            #typing-name::after {
+                content: "ANIRUDH CHITTIMILLA";
+                animation: typing 2.5s steps(20, end) forwards;
+                display: inline-block;
+                white-space: nowrap;
+                overflow: hidden;
+                border-right: 2px solid #ff8a7a;
+            }
+
+            @keyframes typing {
+                from {
+                    width: 0;
+                }
+
+                to {
+                    width: 100%;
+                    border-right-color: transparent;
+                }
+            }
+
+            #loading-screen {
+                animation: fade-out 1s ease-in-out 3.5s forwards;
+                pointer-events: auto;
+            }
+
+            #loading-sub {
+                animation: fade-in 1s ease-in-out 2s forwards;
+            }
+
+            @keyframes fade-out {
+                from {
+                    opacity: 1;
+                    visibility: visible;
+                }
+
+                to {
+                    opacity: 0;
+                    visibility: hidden;
+                }
+            }
+
+            @keyframes fade-in {
+                from {
+                    opacity: 0;
+                }
+
+                to {
+                    opacity: 1;
+                }
+            }
+        </style>
+    </div>
+    <div id="mobile-menu" class="fixed top-0 right-0 h-full w-[65%] max-w-[260px] 
+            bg-[#131313]/20 backdrop-blur-2xl
+            border-l border-[#484848]/30
+            z-[9999] flex flex-col items-start justify-start pt-28 gap-8 px-8
+
+            transform translate-x-full transition-transform duration-500 ease-in-out">
+        <a href="index.html"
+            class="text-[#ff8a7a] font-headline text-[12px] uppercase tracking-widest border-b border-[#ff8a7a] pb-1">
+            Home
+        </a>
+
+        <a href="about.html"
+            class="text-[#acabaa] font-headline text-[12px] uppercase tracking-widest hover:text-[#ff8a7a] transition-colors duration-300">
+            About
+        </a>
+
+        <a href="skills.html"
+            class="text-[#acabaa] font-headline text-[12px] uppercase tracking-widest hover:text-[#ff8a7a] transition-colors duration-300">
+            Skills
+        </a>
+
+        <a href="projects.html"
+            class="text-[#acabaa] font-headline text-[12px] uppercase tracking-widest hover:text-[#ff8a7a] transition-colors duration-300">
+            Projects
+        </a>
+
+        <a href="contact.html"
+            class="text-[#acabaa] font-headline text-[12px] uppercase tracking-widest hover:text-[#ff8a7a] transition-colors duration-300">
+            Contact
+        </a>
+
+    </div>
+    <div id="menu-backdrop"
+        class="fixed inset-0 bg-black/30 backdrop-blur-md z-[9998] opacity-0 pointer-events-none transition-all duration-500">
+    </div>
+</body>
+
+</html>
