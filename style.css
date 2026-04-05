@@ -474,3 +474,14 @@ footer {
   filter: blur(8px);
   transition: filter 0.4s ease;
 }
+
+/* ─── LOADING TEXT MOBILE FIX ─── */
+@media (max-width: 768px) {
+  #loading-screen h1 {
+    font-size: 28px !important;
+  }
+
+  #loading-screen p {
+    font-size: 12px !important;
+  }
+}
