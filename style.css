@@ -5,6 +5,7 @@ html {
 body {
   background-color: #0e0e0e;
   overflow-x: hidden;
+  overflow-y: auto;
   position: relative;
 }
 
@@ -332,7 +333,7 @@ body.custom-cursor-active button {
   top: 0;
   left: 0;
   width: 100%;
-  height: 100%;
+  height: 100vh;
   z-index: 0;
   /* behind content, above pure bg */
   z-index: 0;
@@ -497,4 +498,13 @@ body {
 .orbital-path {
   max-width: 100vw;
   overflow: hidden;
+}
+
+/* ✅ MOBILE FIX FOR SCROLL BREAK */
+@media (max-width: 768px) {
+  .ambient-glow {
+    width: 300px !important;
+    height: 300px !important;
+    filter: blur(60px) !important;
+  }
 }

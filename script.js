@@ -324,7 +324,7 @@ document.addEventListener("DOMContentLoaded", () => {
     canvas.height = window.innerHeight;
 
     let particles = [];
-    const numParticles = 120;
+    const numParticles = window.innerWidth < 768 ? 40 : 120;
 
     let mouse = { x: null, y: null, radius: 120 };
 
