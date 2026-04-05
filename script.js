@@ -545,7 +545,7 @@ document.addEventListener("DOMContentLoaded", () => {
             backdrop.classList.remove("pointer-events-none");
             backdrop.classList.add("opacity-100");
             page.classList.add("page-blur");
-            document.body.style.overflow = "hidden"; // ✅ lock body scroll
+            document.body.style.overflow = "";
             isOpen = true;
         } else {
             // CLOSE
