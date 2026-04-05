@@ -545,7 +545,10 @@ document.addEventListener("DOMContentLoaded", () => {
             backdrop.classList.remove("pointer-events-none");
             backdrop.classList.add("opacity-100");
             page.classList.add("page-blur");
+<<<<<<< HEAD
             document.body.style.overflow = "hidden"; // ✅ lock body scroll
+=======
+>>>>>>> ed1d5e324a7f129e639f00254f01a582eff331e1
             isOpen = true;
         } else {
             // CLOSE
@@ -554,7 +557,10 @@ document.addEventListener("DOMContentLoaded", () => {
             backdrop.classList.add("pointer-events-none");
             backdrop.classList.remove("opacity-100");
             page.classList.remove("page-blur");
+<<<<<<< HEAD
             document.body.style.overflow = ""; // ✅ restore scroll
+=======
+>>>>>>> ed1d5e324a7f129e639f00254f01a582eff331e1
             isOpen = false;
         }
     });
@@ -567,6 +573,7 @@ document.addEventListener("DOMContentLoaded", () => {
         backdrop.classList.remove("opacity-100");
         page.classList.remove("page-blur");
         document.body.style.overflow = ""; // ✅ restore scroll
+
         isOpen = false;
     });
 
@@ -579,6 +586,7 @@ document.addEventListener("DOMContentLoaded", () => {
             backdrop.classList.remove("opacity-100");
             page.classList.remove("page-blur");
             document.body.style.overflow = ""; // ✅ restore scroll
+
             isOpen = false;
         });
     });
