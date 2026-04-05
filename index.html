@@ -232,9 +232,22 @@
             </div>
             <!-- Centered Branding -->
             <div class="relative z-10 space-y-6 text-center pt-8">
-                <h2 class="text-2xl md:text-3xl font-headline font-light tracking-[0.4em] text-transparent bg-clip-text bg-gradient-to-r from-[#f3a77d] via-[#ff8a7a] to-[#c0ee91] h-10 uppercase"
+
+                <!-- Desktop: single-line typing (hidden on mobile) -->
+                <h2 class="hidden md:block text-3xl font-headline font-light tracking-[0.4em] text-transparent bg-clip-text bg-gradient-to-r from-[#f3a77d] via-[#ff8a7a] to-[#c0ee91] h-10 uppercase"
                     id="typing-name">
                 </h2>
+
+                <!-- Mobile: two-line stacked (hidden on desktop) -->
+                <div class="flex md:hidden flex-col items-center gap-1" id="typing-name-mobile">
+                    <span
+                        class="text-3xl font-headline font-light tracking-[0.3em] text-transparent bg-clip-text bg-gradient-to-r from-[#f3a77d] via-[#ff8a7a] to-[#c0ee91] uppercase"
+                        id="mobile-line1"></span>
+                    <span
+                        class="text-2xl font-headline font-light tracking-[0.2em] text-transparent bg-clip-text bg-gradient-to-r from-[#ff8a7a] to-[#c0ee91] uppercase"
+                        id="mobile-line2"></span>
+                </div>
+
                 <p class="text-sm md:text-xl font-headline tracking-[0.3em] text-on-surface-variant uppercase opacity-0"
                     id="loading-sub">
                     Explore My Portfolio
@@ -259,6 +272,7 @@
                 }
             }
 
+            /* ── Desktop typing (single line) ── */
             #typing-name::after {
                 content: "ANIRUDH CHITTIMILLA";
                 animation: typing 2.5s steps(20, end) forwards;
@@ -269,6 +283,48 @@
             }
 
             @keyframes typing {
+                from {
+                    width: 0;
+                }
+
+                to {
+                    width: 100%;
+                    border-right-color: transparent;
+                }
+            }
+
+            /* ── Mobile typing (two lines) ── */
+            #mobile-line1::after {
+                content: "ANIRUDH";
+                animation: typingLine1 1.2s steps(8, end) forwards;
+                display: inline-block;
+                white-space: nowrap;
+                overflow: hidden;
+                border-right: 2px solid #ff8a7a;
+            }
+
+            #mobile-line2::after {
+                content: "CHITTIMILLA";
+                animation: typingLine2 1.5s steps(13, end) 1.2s forwards;
+                display: inline-block;
+                white-space: nowrap;
+                overflow: hidden;
+                width: 0;
+                border-right: 2px solid #c0ee91;
+            }
+
+            @keyframes typingLine1 {
+                from {
+                    width: 0;
+                }
+
+                to {
+                    width: 100%;
+                    border-right-color: transparent;
+                }
+            }
+
+            @keyframes typingLine2 {
                 from {
                     width: 0;
                 }
