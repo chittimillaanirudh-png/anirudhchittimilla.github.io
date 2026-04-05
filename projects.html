@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en">
+
+<head>
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+    <link
+        href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&amp;family=Manrope:wght@300;400;500;600;700;800&amp;display=swap"
+        rel="stylesheet" />
+    <link
+        href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
+        rel="stylesheet" />
+    <link
+        href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
+        rel="stylesheet" />
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <link href="style.css" rel="stylesheet" />
+    <script src="script.js"></script>
+</head>
+
+<body class="font-body text-on-surface selection:bg-primary-container selection:text-on-primary-container">
+    <div id="page-content">
+
+        <div class="grain-overlay"></div>
+        <!-- Ambient Lighting Background -->
+        <div class="ambient-glow bg-tertiary top-[-20%] left-[-10%]"></div>
+        <div class="ambient-glow bg-primary bottom-[-10%] right-[-5%]"></div>
+        <div class="ambient-glow bg-secondary top-[40%] right-[10%] opacity-5"></div>
+        <!-- TopNavBar -->
+        <nav
+            class="fixed top-0 w-full z-50 bg-transparent backdrop-blur-md border-b border-[#484848]/20 shadow-[0_0_40px_rgba(255,138,122,0.1)]">
+            <div class="flex justify-between items-center px-8 py-6 max-w-[1440px] mx-auto">
+                <div
+                    class="text-xl font-light tracking-[0.2em] text-transparent bg-clip-text bg-gradient-to-r from-[#f3a77d] via-[#ff8a7a] to-[#c0ee91] font-headline">
+                    AC
+                </div>
+                <div
+                    class="hidden md:flex items-center gap-10 font-headline font-light tracking-wide uppercase text-[10px] md:text-xs">
+                    <a class="text-[#acabaa] hover:text-[#ff8a7a] transition-colors duration-300"
+                        href="index.html">Home</a>
+                    <a class="text-[#acabaa] hover:text-[#ff8a7a] transition-colors duration-300"
+                        href="about.html">About</a>
+                    <a class="text-[#acabaa] hover:text-[#ff8a7a] transition-colors duration-300"
+                        href="skills.html">Skills</a>
+                    <a class="text-[#ff8a7a] font-medium border-b border-[#ff8a7a] pb-1"
+                        href="projects.html">Projects</a>
+                    <a class="text-[#acabaa] hover:text-[#ff8a7a] transition-colors duration-300"
+                        href="contact.html">Contact</a>
+                </div>
+                <a href="contact.html">
+                    <button
+                        class="bg-transparent border border-outline-variant/30 px-6 py-2 rounded-full text-[10px] uppercase tracking-widest text-[#ff8a7a] hover:shadow-[0_0_15px_-2px_#ff8a7a] hover:border-[#ff8a7a] transition-all duration-300 scale-95 active:scale-90 font-headline">
+                        Hire Me
+                    </button>
+                </a>
+                <button id="menu-btn" class="md:hidden text-[#ff8a7a]">
+                    <span class="material-symbols-outlined text-3xl">menu</span>
+                </button>
+            </div>
+        </nav>
+        <!-- Live Time Component -->
+        <div class="fixed top-28 right-8 md:right-16 lg:right-24 z-40">
+            <div
+                class="bg-surface-container/40 backdrop-blur-sm px-5 py-3 rounded-xl border border-outline-variant/10 flex flex-col items-end shadow-lg min-w-[140px]">
+                <div class="flex items-center gap-3 mb-1.5">
+                    <span id="live-time"
+                        class="text-xs md:text-sm font-headline font-bold text-on-surface tracking-widest">--:--
+                        --</span>
+                    <div class="relative flex h-2 w-2">
+                        <span
+                            class="animate-ping absolute inline-flex h-full w-full rounded-full bg-secondary opacity-75"></span>
+                        <span class="relative inline-flex rounded-full h-2 w-2 bg-secondary"></span>
+                    </div>
+                </div>
+                <span id="live-date"
+                    class="text-[10px] font-headline font-light tracking-[0.2em] text-on-surface-variant uppercase">---
+                    --,
+                    ----</span>
+            </div>
+        </div>
+        <main class="relative pt-32 pb-24 px-8 max-w-7xl mx-auto">
+            <!-- Hero Section -->
+            <section class="relative mb-20">
+                <!-- Orbital decorative line -->
+                <div class="orbital-path w-[800px] h-[800px] -top-64 -left-32"></div>
+                <div class="max-w-3xl">
+                    <span
+                        class="label-md uppercase tracking-[0.2rem] text-secondary font-semibold mb-4 block">Portfolio</span>
+                    <h1
+                        class="text-6xl md:text-8xl font-headline font-light tracking-tight mb-6 bg-gradient-to-r from-[#f3a77d] via-[#ff8a7a] to-[#c0ee91] bg-clip-text text-transparent">
+                        My Projects
+                    </h1>
+                    <p class="text-xl text-on-surface-variant font-light leading-relaxed max-w-2xl">
+                        A showcase of my recent work and experiments. Exploring the boundaries between creative
+                        expression
+                        and technical precision.
+                    </p>
+                </div>
+            </section>
+            <!-- Placeholder Section (Coming Soon) -->
+            <section class="relative min-h-[500px] flex items-center justify-center">
+                <div
+                    class="absolute inset-0 flex items-center justify-center opacity-10 pointer-events-none overflow-hidden">
+                    <div
+                        class="w-[600px] h-[600px] border border-outline-variant rounded-full animate-[pulse_8s_infinite]">
+                    </div>
+                    <div
+                        class="absolute w-[400px] h-[400px] border border-primary/30 rounded-full animate-[pulse_12s_infinite]">
+                    </div>
+                </div>
+                <div class="relative group">
+                    <!-- Large Empty State Card -->
+                    <div
+                        class="w-full max-w-4xl p-16 md:p-24 rounded-full border border-dashed border-outline-variant/40 bg-surface-variant/10 backdrop-blur-xl flex flex-col items-center text-center transition-all duration-500 hover:border-primary/40 hover:bg-surface-variant/20">
+                        <div class="mb-8 relative">
+                            <span
+                                class="material-symbols-outlined text-6xl text-on-surface-variant/30 group-hover:text-primary-dim/60 transition-colors duration-500">
+                                layers
+                            </span>
+                            <!-- Soft pulse glow behind icon -->
+                            <div
+                                class="absolute inset-0 bg-primary/20 blur-2xl rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-700">
+                            </div>
+                        </div>
+                        <h2 class="text-3xl font-headline font-light text-on-surface mb-4">Under Development</h2>
+                        <p class="text-on-surface-variant max-w-md leading-relaxed">
+                            I am currently curating the most significant pieces of my work. The orbital laboratory is
+                            active, and new case studies will land here soon.
+                        </p>
+                        <div class="mt-12 flex flex-col md:flex-row items-center gap-6">
+                            <div
+                                class="flex items-center gap-3 px-4 py-2 bg-surface-container rounded-full border border-outline-variant/10">
+                                <div class="w-2 h-2 rounded-full bg-secondary shadow-[0_0_8px_rgba(192,238,145,0.8)]">
+                                </div>
+                                <span class="text-xs uppercase tracking-widest text-on-surface-variant">Live Updates in
+                                    Progress</span>
+                            </div>
+                            <button
+                                class="text-xs uppercase tracking-[0.15rem] font-bold text-primary hover:text-secondary transition-all duration-300 group/btn">
+                                Notify Me
+                                <div
+                                    class="h-[1px] w-0 group-hover/btn:w-full bg-secondary transition-all duration-300 mx-auto mt-1">
+                                </div>
+                            </button>
+                        </div>
+                    </div>
+                    <!-- Floating Accents -->
+                    <div
+                        class="absolute -top-10 -right-10 w-24 h-24 rounded-full bg-tertiary-fixed-dim/10 backdrop-blur-md border border-white/5 hidden md:block">
+                    </div>
+                    <div
+                        class="absolute -bottom-6 -left-12 w-32 h-32 rounded-full bg-primary-fixed-dim/5 backdrop-blur-sm border border-white/5 hidden md:block">
+                    </div>
+                </div>
+            </section>
+            <!-- Secondary Projects Preview (Subtle Asymmetric Layout) -->
+            <section class="mt-40 grid grid-cols-1 md:grid-cols-12 gap-12 items-center">
+                <div class="md:col-span-5 order-2 md:order-1">
+                    <span class="label-md uppercase tracking-[0.2rem] text-tertiary mb-4 block">Coming Soon</span>
+                    <h3 class="text-4xl font-headline font-light mb-6">The Aetheric Framework</h3>
+                    <p class="text-on-surface-variant leading-relaxed mb-8">
+                        An open-source exploration into cinematic UI motion libraries. Designed for high-fidelity
+                        storytelling and immersive web experiences.
+                    </p>
+                    <div class="w-12 h-[1px] bg-outline-variant"></div>
+                </div>
+                <div class="md:col-span-7 order-1 md:order-2">
+                    <div
+                        class="aspect-video bg-surface-container rounded-xl border border-outline-variant/20 overflow-hidden group">
+                        <img class="w-full h-full object-cover grayscale opacity-40 group-hover:grayscale-0 group-hover:opacity-60 transition-all duration-700 scale-110 group-hover:scale-100"
+                            data-alt="Abstract digital render of flowing silk textures in deep coral and charcoal black tones with cinematic lighting and film grain"
+                            src="https://lh3.googleusercontent.com/aida-public/AB6AXuCjQFY_E2rIoUchmXPkJedG6opl9nsisJB9BFVmLXzIYeYW_cInETuF_8TId9m3Oa82tezV32HnKfmwKmsX81TFuxydHOPGba7xio0XwUw-DgPqyM6SNM2-WnoTqY1Y19zt1rfJEdvHKjkCTCfXVnesE_6xLunLtuDyrQ5sud2TLfHT4t4SmeFC1qI25iQLPm_Emn7rgcugAx7r8zrXqsdyXCf8g4-Z9IN5cI5TJBk1TVAWBQHV6dxS8LEv6iwyQzpt43OL3knqQy6G" />
+                    </div>
+                </div>
+            </section>
+        </main>
+        <!-- Footer -->
+        <footer class="w-full py-12 px-8 bg-[#131313]">
+            <div class="max-w-[1440px] mx-auto flex flex-col md:flex-row justify-between items-center gap-6">
+                <div class="font-['Manrope'] text-sm tracking-tighter text-[#acabaa]">Building the future with code
+                </div>
+                <div class="flex gap-8">
+                    <a class="font-['Manrope'] text-sm tracking-tighter text-[#acabaa] hover:text-[#c0ee91] underline-offset-8 hover:underline decoration-[#c0ee91] transition-all duration-500"
+                        href="https://www.instagram.com/ch_anirudh37_official" target="_blank">Instagram</a>
+                    <a class="font-['Manrope'] text-sm tracking-tighter text-[#acabaa] hover:text-[#c0ee91] underline-offset-8 hover:underline decoration-[#c0ee91] transition-all duration-500"
+                        href="https://www.linkedin.com/in/anirudh-chittimilla-a74360341" target="_blank">LinkedIn</a>
+                    <a class="font-['Manrope'] text-sm tracking-tighter text-[#acabaa] hover:text-[#c0ee91] underline-offset-8 hover:underline decoration-[#c0ee91] transition-all duration-500"
+                        href="https://github.com/chittimillaanirudh-png" target="_blank">GitHub</a>
+                </div>
+                <div class="font-['Manrope'] text-sm tracking-tighter text-[#acabaa] opacity-50">© 2026 ANIRUDH</div>
+            </div>
+        </footer>
+
+        <canvas id="particle-bg"></canvas>
+    </div>
+    <div id="mobile-menu" class="fixed top-0 right-0 h-full w-[70%] max-w-[280px] overflow-hidden
+            bg-[#131313]/20 backdrop-blur-2xl
+            border-l border-[#484848]/30
+            z-[9999] flex flex-col items-start justify-start pt-28 gap-8 px-8
+
+            transform translate-x-full transition-transform duration-500 ease-in-out">
+        <a href="index.html"
+            class="text-[#acabaa] font-headline text-[12px] uppercase tracking-widest hover:text-[#ff8a7a] transition-colors duration-300">
+            Home
+        </a>
+
+        <a href="about.html"
+            class="text-[#acabaa] font-headline text-[12px] uppercase tracking-widest hover:text-[#ff8a7a] transition-colors duration-300">
+            About
+        </a>
+
+        <a href="skills.html"
+            class="text-[#acabaa] font-headline text-[12px] uppercase tracking-widest hover:text-[#ff8a7a] transition-colors duration-300">
+            Skills
+        </a>
+
+        <a href="projects.html"
+            class="text-[#ff8a7a] font-headline text-[12px] uppercase tracking-widest border-b border-[#ff8a7a] pb-1">
+            Projects
+        </a>
+
+        <a href="contact.html"
+            class="text-[#acabaa] font-headline text-[10px] uppercase tracking-widest hover:text-[#ff8a7a] transition-colors duration-300">
+            Contact
+        </a>
+
+    </div>
+    <div id="menu-backdrop"
+        class="fixed inset-0 bg-black/30 backdrop-blur-md z-[9998] opacity-0 pointer-events-none transition-all duration-500">
+    </div>
+</body>
+
+
+</html>

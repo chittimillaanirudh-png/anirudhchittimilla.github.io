@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en">
+
+<head>
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+    <title>About Me | ANIRUDH CHITTIMILLA</title>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&amp;family=Manrope:wght@300;400;500;600;700&amp;display=swap"
+        rel="stylesheet" />
+    <link
+        href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
+        rel="stylesheet" />
+    <link
+        href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
+        rel="stylesheet" />
+    <link href="style.css" rel="stylesheet" />
+    <script src="script.js"></script>
+</head>
+
+<body class="font-body selection:bg-primary/30">
+    <div id="page-content">
+        <div class="grain-overlay"></div>
+        <!-- Background Orbs -->
+        <div class="ambient-glow bg-primary top-[-100px] left-[-100px]"></div>
+        <div class="ambient-glow bg-secondary bottom-[-200px] right-[-100px]"></div>
+        <div class="ambient-glow bg-tertiary top-[40%] right-[10%] opacity-10"></div>
+        <!-- TopNavBar -->
+        <nav
+            class="fixed top-0 w-full z-50 bg-transparent backdrop-blur-md border-b border-[#484848]/20 shadow-[0_0_40px_rgba(255,138,122,0.1)]">
+            <div class="flex justify-between items-center px-8 py-6 max-w-[1440px] mx-auto">
+                <div
+                    class="text-xl font-light tracking-[0.2em] text-transparent bg-clip-text bg-gradient-to-r from-[#f3a77d] via-[#ff8a7a] to-[#c0ee91] font-headline">
+                    AC
+                </div>
+                <div
+                    class="hidden md:flex items-center gap-10 font-headline font-light tracking-wide uppercase text-[10px] md:text-xs">
+                    <a class="text-[#acabaa] hover:text-[#ff8a7a] transition-colors duration-300"
+                        href="index.html">Home</a>
+                    <a class="text-[#ff8a7a] font-medium border-b border-[#ff8a7a] pb-1" href="about.html">About</a>
+                    <a class="text-[#acabaa] hover:text-[#ff8a7a] transition-colors duration-300"
+                        href="skills.html">Skills</a>
+                    <a class="text-[#acabaa] hover:text-[#ff8a7a] transition-colors duration-300"
+                        href="projects.html">Projects</a>
+                    <a class="text-[#acabaa] hover:text-[#ff8a7a] transition-colors duration-300"
+                        href="contact.html">Contact</a>
+                </div>
+                <a href="contact.html">
+                    <button
+                        class="bg-transparent border border-outline-variant/30 px-6 py-2 rounded-full text-[10px] uppercase tracking-widest text-[#ff8a7a] hover:shadow-[0_0_15px_-2px_#ff8a7a] hover:border-[#ff8a7a] transition-all duration-300 scale-95 active:scale-90 font-headline">
+                        Hire Me
+                    </button>
+                </a>
+                <button id="menu-btn" class="md:hidden text-[#ff8a7a]">
+                    <span class="material-symbols-outlined text-3xl">menu</span>
+                </button>
+            </div>
+
+        </nav>
+        <!-- Live Time Component -->
+        <div class="fixed top-28 right-8 md:right-16 lg:right-24 z-40">
+            <div
+                class="bg-surface-container/40 backdrop-blur-sm px-5 py-3 rounded-xl border border-outline-variant/10 flex flex-col items-end shadow-lg min-w-[140px]">
+                <div class="flex items-center gap-3 mb-1.5">
+                    <span id="live-time"
+                        class="text-xs md:text-sm font-headline font-bold text-on-surface tracking-widest">--:--
+                        --</span>
+                    <div class="relative flex h-2 w-2">
+                        <span
+                            class="animate-ping absolute inline-flex h-full w-full rounded-full bg-secondary opacity-75"></span>
+                        <span class="relative inline-flex rounded-full h-2 w-2 bg-secondary"></span>
+                    </div>
+                </div>
+                <span id="live-date"
+                    class="text-[10px] font-headline font-light tracking-[0.2em] text-on-surface-variant uppercase">---
+                    --,
+                    ----</span>
+            </div>
+        </div>
+        <main class="pt-32 pb-24 px-8 max-w-[1440px] mx-auto relative">
+            <!-- Hero Section -->
+            <section class="mb-24 md:mb-32">
+                <div class="flex flex-col md:flex-row gap-12 items-start">
+                    <div class="flex-1 space-y-8">
+                        <span class="label-md uppercase tracking-[0.2em] text-secondary font-headline text-xs">Curating
+                            the
+                            Future</span>
+                        <h1 class="text-5xl md:text-8xl font-headline font-light leading-tight gradient-text">About Me
+                        </h1>
+                        <p class="text-xl md:text-2xl text-on-surface font-light leading-relaxed max-w-2xl">
+                            I am a dedicated and passionate B.Tech student with a strong interest in software
+                            development
+                            and problem-solving. I enjoy building efficient, scalable, and user-friendly applications
+                            that
+                            solve real-world challenges.
+                        </p>
+                    </div>
+                    <div class="home-right w-full md:w-2/5 group">
+                        <div class="home-image-wrap">
+                            <div class="home-image-bg"></div>
+                            <img data-alt="professional cinematic portrait of a young man with a focused expression, soft studio lighting with coral and mint rim light highlights, dark atmospheric background"
+                                src="https://lh3.googleusercontent.com/aida/ADBb0uiZjtvHHl9U9cspuNk77hyegreTXNwNL9ifWSuFL1azzDRnxuT_QMCa7BjhZPGiargQzl5ItNgo5kzXmIoIhMYxly3TKklcHF-9vQCrLPxZeezTEK2K6ENOfrGsjdqxpmlTNcoeY3TxAeBLp8RAwwRJJSzhqw__VNOSPiroQrQzu0mVMBitKmVSzc6ZCApxWH06aZmXijQLPb8jqfXQ_JBS48t7SsCOtnM-TKh71KrtFkefbyN5j9uADpyUwGZ_zoLTl9-u-MeK7g" />
+                        </div>
+                    </div>
+                </div>
+            </section>
+            <!-- Bento Content Grid -->
+            <div class="grid grid-cols-1 md:grid-cols-12 gap-8 mb-24">
+                <!-- Journey Box -->
+                <div
+                    class="md:col-span-8 p-8 md:p-12 rounded-xl bg-surface-container-low border border-outline-variant/20 relative overflow-hidden group hover:bg-surface-container transition-all duration-500">
+                    <div class="absolute top-0 right-0 w-64 h-64 bg-primary/5 blur-3xl -mr-32 -mt-32 rounded-full">
+                    </div>
+                    <span class="material-symbols-outlined text-primary mb-6"
+                        data-icon="auto_awesome">auto_awesome</span>
+                    <h3 class="text-2xl font-headline font-medium mb-6 text-on-surface">The Creative Journey</h3>
+                    <p class="text-on-surface-variant text-lg leading-relaxed font-light">
+                        My journey in technology started with curiosity and has grown into a deep passion for coding,
+                        system
+                        design, and continuous improvement. I constantly explore new tools, technologies, and best
+                        practices
+                        to enhance my skills. I believe in writing clean, maintainable code and creating impactful
+                        digital
+                        experiences. My goal is to become a skilled developer who can contribute to innovative and
+                        meaningful projects.
+                    </p>
+                </div>
+                <!-- Objective Box -->
+                <div
+                    class="md:col-span-4 p-8 rounded-xl bg-surface-container-high border border-outline-variant/20 flex flex-col justify-center relative overflow-hidden group hover:scale-[1.02] transition-transform duration-500">
+                    <div class="orbital-line top-1/4"></div>
+                    <div class="orbital-line bottom-1/4"></div>
+                    <span class="label-md uppercase tracking-widest text-[#acabaa] mb-4 text-[10px]">Mission</span>
+                    <h4 class="text-2xl font-headline font-light italic leading-snug text-primary-dim">
+                        "To leverage my technical skills and creativity to build impactful software solutions while
+                        continuously learning and growing in the field of technology."
+                    </h4>
+                </div>
+                <!-- Location Details -->
+                <div class="md:col-span-12 grid grid-cols-1 md:grid-cols-2 gap-8 mt-4">
+                    <div
+                        class="flex items-center gap-6 p-8 rounded-xl bg-surface-container-highest/40 backdrop-blur-xl border border-outline-variant/10 group">
+                        <div
+                            class="w-16 h-16 rounded-full bg-secondary/10 flex items-center justify-center group-hover:bg-secondary/20 transition-colors">
+                            <span class="material-symbols-outlined text-secondary" data-icon="location_on"
+                                data-weight="fill" style="font-variation-settings: 'FILL' 1;">location_on</span>
+                        </div>
+                        <div>
+                            <p class="label-md uppercase text-[10px] text-[#acabaa] tracking-widest mb-1">Current
+                                Location
+                            </p>
+                            <p class="text-xl font-headline font-light text-on-surface">Ibrahimpatnam, Rangareddy</p>
+                        </div>
+                    </div>
+                    <div
+                        class="flex items-center gap-6 p-8 rounded-xl bg-surface-container-highest/40 backdrop-blur-xl border border-outline-variant/10 group">
+                        <div
+                            class="w-16 h-16 rounded-full bg-tertiary/10 flex items-center justify-center group-hover:bg-tertiary/20 transition-colors">
+                            <span class="material-symbols-outlined text-tertiary" data-icon="home_pin">home_pin</span>
+                        </div>
+                        <div>
+                            <p class="label-md uppercase text-[10px] text-[#acabaa] tracking-widest mb-1">Native Place
+                            </p>
+                            <p class="text-xl font-headline font-light text-on-surface">Ramajipet, Yadagirigutta</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- Vision/Closing -->
+            <section class="py-24 text-center relative">
+                <div class="max-w-3xl mx-auto space-y-8">
+                    <div class="w-px h-24 bg-gradient-to-b from-transparent via-primary to-transparent mx-auto mb-12">
+                    </div>
+                    <h2 class="text-4xl font-headline font-extralight tracking-tight text-on-surface">Building the
+                        digital
+                        <span class="italic text-secondary">frontier</span>, one line at a time.
+                    </h2>
+                    <div class="flex justify-center gap-4 pt-8">
+                        <a class="px-12 py-4 bg-transparent border border-outline-variant/20 rounded-full text-on-surface label-md uppercase tracking-widest hover:border-primary hover:shadow-[0_0_20px_rgba(255,142,127,0.2)] transition-all duration-500"
+                            href="contact.html">Get in Touch</a>
+                    </div>
+                </div>
+            </section>
+        </main>
+        <!-- Footer -->
+        <footer class="w-full py-12 px-8 bg-[#131313]">
+            <div class="max-w-[1440px] mx-auto flex flex-col md:flex-row justify-between items-center gap-6">
+                <div class="font-['Manrope'] text-sm tracking-tighter text-[#acabaa]">Building the future with code
+                </div>
+                <div class="flex gap-8">
+                    <a class="font-['Manrope'] text-sm tracking-tighter text-[#acabaa] hover:text-[#c0ee91] underline-offset-8 hover:underline decoration-[#c0ee91] transition-all duration-500"
+                        href="https://www.instagram.com/ch_anirudh37_official" target="_blank">Instagram</a>
+                    <a class="font-['Manrope'] text-sm tracking-tighter text-[#acabaa] hover:text-[#c0ee91] underline-offset-8 hover:underline decoration-[#c0ee91] transition-all duration-500"
+                        href="https://www.linkedin.com/in/anirudh-chittimilla-a74360341" target="_blank">LinkedIn</a>
+                    <a class="font-['Manrope'] text-sm tracking-tighter text-[#acabaa] hover:text-[#c0ee91] underline-offset-8 hover:underline decoration-[#c0ee91] transition-all duration-500"
+                        href="https://github.com/chittimillaanirudh-png" target="_blank">GitHub</a>
+                </div>
+                <div class="font-['Manrope'] text-sm tracking-tighter text-[#acabaa] opacity-50">© 2026 ANIRUDH</div>
+            </div>
+        </footer>
+        <!-- Map context for Location Details (Visual placeholder) -->
+        <div class="hidden" data-location="Ibrahimpatnam, Telangana" style=""></div>
+        <canvas id="particle-bg"></canvas>
+    </div>
+    <div id="mobile-menu" class="fixed top-0 right-0 h-full w-[70%] max-w-[280px] overflow-hidden
+            bg-[#131313]/20 backdrop-blur-2xl
+            border-l border-[#484848]/30
+            z-[9999] flex flex-col items-start justify-start pt-28 gap-8 px-8
+
+            transform translate-x-full transition-transform duration-500 ease-in-out">
+        <a href="index.html"
+            class="text-[#acabaa] font-headline text-[12px] uppercase tracking-widest hover:text-[#ff8a7a] transition-colors duration-300">
+            Home
+        </a>
+
+        <a href="about.html"
+            class="text-[#ff8a7a] font-headline text-[12px] uppercase tracking-widest border-b border-[#ff8a7a] pb-1">
+            About
+        </a>
+
+        <a href="skills.html"
+            class="text-[#acabaa] font-headline text-[12px] uppercase tracking-widest hover:text-[#ff8a7a] transition-colors duration-300">
+            Skills
+        </a>
+
+        <a href="projects.html"
+            class="text-[#acabaa] font-headline text-[12px] uppercase tracking-widest hover:text-[#ff8a7a] transition-colors duration-300">
+            Projects
+        </a>
+
+        <a href="contact.html"
+            class="text-[#acabaa] font-headline text-[12px] uppercase tracking-widest hover:text-[#ff8a7a] transition-colors duration-300">
+            Contact
+        </a>
+
+    </div>
+    <div id="menu-backdrop"
+        class="fixed inset-0 bg-black/30 backdrop-blur-md z-[9998] opacity-0 pointer-events-none transition-all duration-500">
+    </div>
+</body>
+
+</html>
