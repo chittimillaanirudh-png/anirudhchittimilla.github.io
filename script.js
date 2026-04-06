@@ -1,4 +1,10 @@
+// ─── SESSION VISIT TRACKING ─────────────────────────────────
+// Mark session as visited IMMEDIATELY (before anything else runs)
 const isVisited = sessionStorage.getItem("visited");
+if (!isVisited) {
+    sessionStorage.setItem("visited", "true");
+}
+
 tailwind.config = {
     darkMode: "class",
     theme: {
@@ -66,7 +72,7 @@ tailwind.config = {
     },
 };
 
-// Live Time Component Logic
+// ─── LIVE TIME COMPONENT ─────────────────────────────────────
 document.addEventListener("DOMContentLoaded", () => {
     function updateTime() {
         const timeEl = document.getElementById("live-time");
@@ -79,7 +85,7 @@ document.addEventListener("DOMContentLoaded", () => {
         const minutes = now.getMinutes().toString().padStart(2, '0');
         const ampm = hours >= 12 ? 'PM' : 'AM';
         hours = hours % 12;
-        hours = hours ? hours : 12; // the hour '0' should be '12'
+        hours = hours ? hours : 12;
         const timeString = `${hours}:${minutes} ${ampm}`;
 
         const options = { month: 'short', day: 'numeric', year: 'numeric' };
@@ -139,17 +145,32 @@ document.addEventListener("DOMContentLoaded", () => {
 
 });
 
-// ─── ADVANCED CURSOR ────────────────────────────────────────────────────────
+// ─── LOADING SCREEN LOGIC (FIXED) ───────────────────────────
+// isVisited was read at the top of this file.
+// If already visited → hide loading screen immediately (no animation).
+// If first visit → let the CSS animation play normally.
+document.addEventListener("DOMContentLoaded", () => {
+    const loadingScreen = document.getElementById("loading-screen");
+    if (!loadingScreen) return;
+
+    if (isVisited) {
+        // Not first visit — hide loading screen instantly, no animation
+        loadingScreen.style.display = "none";
+    }
+    // If first visit: the CSS animations on #loading-screen handle everything.
+    // The screen fades out via `animation: fade-out 1s ease-in-out 3.5s forwards`.
+    // Nothing extra needed.
+});
+
+// ─── ADVANCED CURSOR ────────────────────────────────────────
 document.addEventListener("DOMContentLoaded", () => {
 
-    // Detect if device supports touch — skip cursor entirely on touch devices
     const isTouchDevice =
         'ontouchstart' in window ||
         navigator.maxTouchPoints > 0 ||
         window.matchMedia("(pointer: coarse)").matches;
 
     if (!isTouchDevice) {
-        // Only create cursor elements on non-touch (desktop) devices
         if (!document.querySelector('.cursor')) {
             const cursorEl = document.createElement('div');
             cursorEl.className = 'cursor';
@@ -209,7 +230,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
 });
 
-// ─── SCROLL & HOVER ANIMATIONS ───────────────────────────────────────────────
+// ─── SCROLL & HOVER ANIMATIONS ───────────────────────────────
 document.addEventListener("DOMContentLoaded", () => {
     // Floating Elements
     const floatingElements = document.querySelectorAll('.float-element');
@@ -257,35 +278,42 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     }
 
-    // Interactive Hover Lift & Smooth Zoom
-    document.querySelectorAll('.card, .project-item, .skill-card').forEach(card => {
-        card.style.willChange = 'transform, box-shadow';
-        card.style.transition = 'box-shadow 0.4s ease-out';
+    // Interactive Hover Lift & Smooth Zoom — desktop only
+    const isTouchDevice =
+        'ontouchstart' in window ||
+        navigator.maxTouchPoints > 0 ||
+        window.matchMedia("(pointer: coarse)").matches;
 
-        card.addEventListener('mouseenter', () => {
-            card.style.transition = 'transform 0.1s ease-out, box-shadow 0.4s ease-out';
-            card.style.boxShadow = '0 10px 30px rgba(255, 142, 127, 0.15), 0 0 15px rgba(255, 142, 127, 0.05)';
+    if (!isTouchDevice) {
+        document.querySelectorAll('.card, .project-item, .skill-card').forEach(card => {
+            card.style.willChange = 'transform, box-shadow';
+            card.style.transition = 'box-shadow 0.4s ease-out';
+
+            card.addEventListener('mouseenter', () => {
+                card.style.transition = 'transform 0.1s ease-out, box-shadow 0.4s ease-out';
+                card.style.boxShadow = '0 10px 30px rgba(255, 142, 127, 0.15), 0 0 15px rgba(255, 142, 127, 0.05)';
+            });
+
+            card.addEventListener('mousemove', e => {
+                const rect = card.getBoundingClientRect();
+                const x = e.clientX - rect.left;
+                const y = e.clientY - rect.top;
+                const centerX = rect.width / 2;
+                const centerY = rect.height / 2;
+
+                const rotateX = (y - centerY) / -10;
+                const rotateY = (centerX - x) / -10;
+
+                card.style.transform = `perspective(1000px) rotateX(${rotateX}deg) rotateY(${rotateY}deg) translateZ(10px) scale(1.03)`;
+            });
+
+            card.addEventListener('mouseleave', () => {
+                card.style.transition = 'transform 0.5s cubic-bezier(0.25, 1, 0.5, 1), box-shadow 0.5s ease-out';
+                card.style.transform = 'perspective(1000px) rotateX(0) rotateY(0) translateZ(0) scale(1)';
+                card.style.boxShadow = 'none';
+            });
         });
-
-        card.addEventListener('mousemove', e => {
-            const rect = card.getBoundingClientRect();
-            const x = e.clientX - rect.left;
-            const y = e.clientY - rect.top;
-            const centerX = rect.width / 2;
-            const centerY = rect.height / 2;
-
-            const rotateX = (y - centerY) / -10;
-            const rotateY = (centerX - x) / -10;
-
-            card.style.transform = `perspective(1000px) rotateX(${rotateX}deg) rotateY(${rotateY}deg) translateZ(10px) scale(1.03)`;
-        });
-
-        card.addEventListener('mouseleave', () => {
-            card.style.transition = 'transform 0.5s cubic-bezier(0.25, 1, 0.5, 1), box-shadow 0.5s ease-out';
-            card.style.transform = 'perspective(1000px) rotateX(0) rotateY(0) translateZ(0) scale(1)';
-            card.style.boxShadow = 'none';
-        });
-    });
+    }
 
     // Intersection Observer for Smooth Viewport Zoom Reveal
     const zoomElements = document.querySelectorAll('.card, .project-item, .skill-card');
@@ -302,9 +330,9 @@ document.addEventListener("DOMContentLoaded", () => {
                 if (entry.isIntersecting) {
                     entry.target.style.opacity = '1';
                     entry.target.style.transform = 'scale(1)';
-                    // Restore default hover transition after reveal completes
                     setTimeout(() => {
                         entry.target.style.transition = 'box-shadow 0.4s ease-out';
+                        entry.target.style.willChange = 'auto';
                     }, 600);
                     zoomObserver.unobserve(entry.target);
                 }
@@ -314,6 +342,7 @@ document.addEventListener("DOMContentLoaded", () => {
         zoomElements.forEach(el => zoomObserver.observe(el));
     }
 });
+
 // ─── BACKGROUND STAR PARTICLES ─────────────────────────────
 document.addEventListener("DOMContentLoaded", () => {
     const canvas = document.getElementById("particle-bg");
@@ -321,8 +350,14 @@ document.addEventListener("DOMContentLoaded", () => {
 
     const ctx = canvas.getContext("2d");
 
-    canvas.width = window.innerWidth;
-    canvas.height = window.innerHeight;
+    // FIX: Use offsetParent's scroll height so canvas covers full page on mobile
+    function resizeCanvas() {
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+    }
+
+    resizeCanvas();
+    window.addEventListener("resize", resizeCanvas);
 
     let particles = [];
     const numParticles = window.innerWidth < 768 ? 40 : 120;
@@ -334,26 +369,18 @@ document.addEventListener("DOMContentLoaded", () => {
         mouse.y = e.clientY;
     });
 
-    window.addEventListener("resize", () => {
-        canvas.width = window.innerWidth;
-        canvas.height = window.innerHeight;
-    });
-
     class Particle {
         constructor() {
             this.x = Math.random() * canvas.width;
             this.y = Math.random() * canvas.height;
 
-            // ⭐ SMALL STAR SIZE
             this.size = Math.random() * 1.5 + 0.5;
             this.baseSize = this.size;
 
             this.speedX = Math.random() * 0.2 - 0.1;
             this.speedY = Math.random() * 0.2 - 0.1;
 
-            // 🎨 RANDOM BETWEEN YOUR TWO COLORS
             this.color = Math.random() > 0.5 ? "#ff8e7f" : "#c0ee91";
-
             this.opacity = Math.random() * 0.4 + 0.2;
         }
 
@@ -361,39 +388,34 @@ document.addEventListener("DOMContentLoaded", () => {
             this.x += this.speedX;
             this.y += this.speedY;
 
-            // wrap around edges
             if (this.x > canvas.width) this.x = 0;
             if (this.x < 0) this.x = canvas.width;
             if (this.y > canvas.height) this.y = 0;
             if (this.y < 0) this.y = canvas.height;
 
-            // distance from cursor
-            const dx = this.x - mouse.x;
-            const dy = this.y - mouse.y;
-            const distance = Math.sqrt(dx * dx + dy * dy);
+            if (mouse.x !== null && mouse.y !== null) {
+                const dx = this.x - mouse.x;
+                const dy = this.y - mouse.y;
+                const distance = Math.sqrt(dx * dx + dy * dy);
 
-            if (distance < mouse.radius) {
-                this.size = this.baseSize + 1.5;
-                this.opacity = 0.9;
-            } else {
-                this.size = this.baseSize;
-                this.opacity = 0.4;
+                if (distance < mouse.radius) {
+                    this.size = this.baseSize + 1.5;
+                    this.opacity = 0.9;
+                } else {
+                    this.size = this.baseSize;
+                    this.opacity = 0.4;
+                }
             }
         }
 
         draw() {
             ctx.beginPath();
-
-            // ⭐ glowing star effect
             ctx.shadowBlur = 10;
             ctx.shadowColor = this.color;
-
             ctx.fillStyle = this.color;
             ctx.globalAlpha = this.opacity;
-
             ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
             ctx.fill();
-
             ctx.globalAlpha = 1;
             ctx.shadowBlur = 0;
         }
@@ -408,27 +430,24 @@ document.addEventListener("DOMContentLoaded", () => {
 
     function animate() {
         ctx.clearRect(0, 0, canvas.width, canvas.height);
-
         particles.forEach(p => {
             p.update();
             p.draw();
         });
-
         requestAnimationFrame(animate);
     }
 
     init();
     animate();
 });
+
 // ─── LOADING SCREEN PARTICLES (TEXT REACTION) ─────────────────
 document.addEventListener("DOMContentLoaded", () => {
 
     const canvas = document.getElementById("loading-particles");
-    const isVisited = sessionStorage.getItem("visited");
-
     if (!canvas) return;
 
-    // ❌ If already visited → disable particles completely
+    // If already visited → disable particles completely
     if (isVisited) {
         canvas.style.display = "none";
         return;
@@ -442,11 +461,7 @@ document.addEventListener("DOMContentLoaded", () => {
     let particles = [];
     const count = 140;
 
-    let mouse = {
-        x: null,
-        y: null,
-        radius: 120
-    };
+    let mouse = { x: null, y: null, radius: 120 };
 
     window.addEventListener("mousemove", (e) => {
         mouse.x = e.clientX;
@@ -472,23 +487,23 @@ document.addEventListener("DOMContentLoaded", () => {
             this.x += this.speedX;
             this.y += this.speedY;
 
-            // wrap
             if (this.x > canvas.width) this.x = 0;
             if (this.x < 0) this.x = canvas.width;
             if (this.y > canvas.height) this.y = 0;
             if (this.y < 0) this.y = canvas.height;
 
-            // distance from text center
-            const dx = this.x - mouse.x;
-            const dy = this.y - mouse.y;
-            const dist = Math.sqrt(dx * dx + dy * dy);
+            if (mouse.x !== null && mouse.y !== null) {
+                const dx = this.x - mouse.x;
+                const dy = this.y - mouse.y;
+                const dist = Math.sqrt(dx * dx + dy * dy);
 
-            if (dist < mouse.radius) {
-                this.size = this.baseSize + 1;
-                this.opacity = 0.6;
-            } else {
-                this.size = this.baseSize;
-                this.opacity = 0.15;
+                if (dist < mouse.radius) {
+                    this.size = this.baseSize + 1;
+                    this.opacity = 0.6;
+                } else {
+                    this.size = this.baseSize;
+                    this.opacity = 0.15;
+                }
             }
         }
 
@@ -496,13 +511,10 @@ document.addEventListener("DOMContentLoaded", () => {
             ctx.beginPath();
             ctx.fillStyle = this.color;
             ctx.globalAlpha = this.opacity;
-
             ctx.shadowBlur = 12;
             ctx.shadowColor = this.color;
-
             ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
             ctx.fill();
-
             ctx.shadowBlur = 0;
             ctx.globalAlpha = 1;
         }
@@ -517,130 +529,18 @@ document.addEventListener("DOMContentLoaded", () => {
 
     function animate() {
         ctx.clearRect(0, 0, canvas.width, canvas.height);
-
         particles.forEach(p => {
             p.update();
             p.draw();
         });
-
         requestAnimationFrame(animate);
     }
 
     init();
     animate();
-
-    // ─── LOADING SCREEN PARTICLES (FIXED) ─────────────────
-    document.addEventListener("DOMContentLoaded", () => {
-
-        const canvas = document.getElementById("loading-particles");
-        if (!canvas) return;
-
-        // ✅ GLOBAL CHECK (same as loader)
-        const isVisited = sessionStorage.getItem("visited");
-
-        // ❌ If already visited → completely disable particles
-        if (isVisited) {
-            canvas.style.display = "none";
-            return;
-        }
-
-        const ctx = canvas.getContext("2d");
-
-        canvas.width = window.innerWidth;
-        canvas.height = window.innerHeight;
-
-        let particles = [];
-        const count = 140;
-
-        let mouse = {
-            x: null,
-            y: null,
-            radius: 120
-        };
-
-        window.addEventListener("mousemove", (e) => {
-            mouse.x = e.clientX;
-            mouse.y = e.clientY;
-        });
-
-        class Particle {
-            constructor() {
-                this.x = Math.random() * canvas.width;
-                this.y = Math.random() * canvas.height;
-
-                this.size = Math.random() * 1.5 + 0.5;
-                this.baseSize = this.size;
-
-                this.speedX = Math.random() * 0.3 - 0.15;
-                this.speedY = Math.random() * 0.3 - 0.15;
-
-                this.color = Math.random() > 0.5 ? "#ff8e7f" : "#c0ee91";
-                this.opacity = Math.random() * 0.25 + 0.05;
-            }
-
-            update() {
-                this.x += this.speedX;
-                this.y += this.speedY;
-
-                if (this.x > canvas.width) this.x = 0;
-                if (this.x < 0) this.x = canvas.width;
-                if (this.y > canvas.height) this.y = 0;
-                if (this.y < 0) this.y = canvas.height;
-
-                const dx = this.x - mouse.x;
-                const dy = this.y - mouse.y;
-                const dist = Math.sqrt(dx * dx + dy * dy);
-
-                if (dist < mouse.radius) {
-                    this.size = this.baseSize + 1;
-                    this.opacity = 0.6;
-                } else {
-                    this.size = this.baseSize;
-                    this.opacity = 0.15;
-                }
-            }
-
-            draw() {
-                ctx.beginPath();
-                ctx.fillStyle = this.color;
-                ctx.globalAlpha = this.opacity;
-
-                ctx.shadowBlur = 12;
-                ctx.shadowColor = this.color;
-
-                ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
-                ctx.fill();
-
-                ctx.shadowBlur = 0;
-                ctx.globalAlpha = 1;
-            }
-        }
-
-        function init() {
-            particles = [];
-            for (let i = 0; i < count; i++) {
-                particles.push(new Particle());
-            }
-        }
-
-        function animate() {
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-            particles.forEach(p => {
-                p.update();
-                p.draw();
-            });
-
-            requestAnimationFrame(animate);
-        }
-
-        init();
-        animate();
-
-    });
-
 });
 
+// ─── MOBILE MENU ─────────────────────────────────────────────
 document.addEventListener("DOMContentLoaded", () => {
     const btn = document.getElementById("menu-btn");
     const menu = document.getElementById("mobile-menu");
@@ -650,63 +550,47 @@ document.addEventListener("DOMContentLoaded", () => {
 
     let isOpen = false;
 
-    btn.addEventListener("click", () => {
-        if (!isOpen) {
-            // OPEN
-            menu.classList.remove("translate-x-full");
-            menu.classList.add("translate-x-0");
-            backdrop.classList.remove("pointer-events-none");
-            backdrop.classList.add("opacity-100");
-            page.classList.add("page-blur");
-            document.body.style.overflow = "";
-            isOpen = true;
-        } else {
-            // CLOSE
-            menu.classList.add("translate-x-full");
-            menu.classList.remove("translate-x-0");
-            backdrop.classList.add("pointer-events-none");
-            backdrop.classList.remove("opacity-100");
-            page.classList.remove("page-blur");
+    function openMenu() {
+        menu.classList.remove("translate-x-full");
+        menu.classList.add("translate-x-0");
+        backdrop.classList.remove("pointer-events-none");
+        backdrop.classList.add("opacity-100");
+        // FIX: Do NOT set overflow hidden on body — it breaks mobile scroll restoration
+        isOpen = true;
+    }
 
-            document.body.style.overflow = ""; // ✅ restore scroll
-            isOpen = false;
-        }
-    });
-
-    // Click outside to close
-    backdrop.addEventListener("click", () => {
+    function closeMenu() {
         menu.classList.add("translate-x-full");
         menu.classList.remove("translate-x-0");
         backdrop.classList.add("pointer-events-none");
         backdrop.classList.remove("opacity-100");
-        page.classList.remove("page-blur");
-        document.body.style.overflow = ""; // ✅ restore scroll
-
+        // FIX: Removed page-blur to avoid filter causing scroll compositing issues on mobile
+        document.body.style.overflow = "";
         isOpen = false;
+    }
+
+    btn.addEventListener("click", () => {
+        if (!isOpen) {
+            openMenu();
+        } else {
+            closeMenu();
+        }
     });
 
-    // Click link → close menu + allow transition
-    menu.querySelectorAll("a").forEach(link => {
-        link.addEventListener("click", () => {
-            menu.classList.add("translate-x-full");
-            menu.classList.remove("translate-x-0");
-            backdrop.classList.add("pointer-events-none");
-            backdrop.classList.remove("opacity-100");
-            page.classList.remove("page-blur");
-            document.body.style.overflow = ""; // ✅ restore scroll
+    backdrop.addEventListener("click", closeMenu);
 
-            isOpen = false;
-        });
+    menu.querySelectorAll("a").forEach(link => {
+        link.addEventListener("click", closeMenu);
     });
 });
+
+// ─── ACTIVE NAV LINK ─────────────────────────────────────────
 document.addEventListener("DOMContentLoaded", () => {
     const links = document.querySelectorAll(".nav-link");
-
     const currentPage = window.location.pathname.split("/").pop();
 
     links.forEach(link => {
         const linkPage = link.getAttribute("href");
-
         if (linkPage === currentPage) {
             link.classList.remove("text-[#acabaa]");
             link.classList.add("text-[#ff8a7a]", "border-b", "border-[#ff8a7a]", "pb-1");

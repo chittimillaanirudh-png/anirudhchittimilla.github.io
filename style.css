@@ -50,6 +50,8 @@ body {
   opacity: 0.15;
   overflow: hidden;
   animation: subtle-pulse 10s infinite ease-in-out;
+  /* FIX: pointer-events none prevents ambient glows from blocking touch/scroll */
+  pointer-events: none;
 }
 
 /* Specific glows used differently across pages */
@@ -88,7 +90,6 @@ body {
   position: relative;
   z-index: 2;
 
-  /* ✅ REDUCED FADE */
   -webkit-mask-image:
     linear-gradient(to bottom, transparent 0%, black 8%, black 85%, transparent 100%),
     linear-gradient(to right, transparent 0%, black 8%),
@@ -116,6 +117,8 @@ body {
   inset: -10% -5%;
   background: radial-gradient(ellipse at center, rgba(201, 168, 76, 0.06) 0%, transparent 70%);
   z-index: 1;
+  /* FIX: Ensure this decorative element never blocks touch */
+  pointer-events: none;
 }
 
 .orbital-path {
@@ -131,6 +134,8 @@ body {
   height: 1px;
   background: linear-gradient(90deg, transparent, rgba(192, 238, 145, 0.2), transparent);
   width: 100%;
+  /* FIX: No touch blocking */
+  pointer-events: none;
 }
 
 /* ─── CUSTOM CURSOR ─── */
@@ -329,21 +334,18 @@ body.custom-cursor-active button {
 
 /* ─── BACKGROUND STAR PARTICLES ─── */
 #particle-bg {
-  position: absolute;
+  position: fixed;
+  /* FIX: fixed instead of absolute — absolute on long pages only covers viewport height,
+                      causing a rendering gap that can stall touch-scroll compositing on mobile */
   top: 0;
   left: 0;
   width: 100%;
-  height: 100vh;
-  z-index: 0;
-  /* behind content, above pure bg */
+  height: 100%;
   z-index: 0;
   pointer-events: none;
   opacity: 0.7;
-}
-
-/* optional cinematic softness */
-#particle-bg {
-  filter: blur(0.3px);
+  /* FIX: Removed blur filter from canvas — even 0.3px blur forces GPU compositing layer
+     which causes stutter on mobile mid-scroll. Visual difference is imperceptible. */
 }
 
 main,
@@ -366,41 +368,30 @@ footer {
   overflow: hidden;
 }
 
-/* COMMON BLOB */
 #torch-transition .blob {
   position: absolute;
   top: 50%;
-
-  /* 🔥 BIGGER SIZE */
   width: 900px;
   height: 900px;
-
   transform: translateY(-50%) scale(0.6);
   border-radius: 50%;
-
-  /* 🔥 STRONGER GLOW */
   filter: blur(70px);
-
   opacity: 0;
   transition: all 1.2s cubic-bezier(0.7, 0, 0.2, 1);
+  pointer-events: none;
 }
 
-/* LEFT (ENHANCED ORANGE) */
 #torch-transition .left {
   left: -300px;
-
   background: radial-gradient(circle,
       rgba(255, 142, 127, 0.45) 0%,
-      /* stronger core */
       rgba(255, 142, 127, 0.25) 35%,
       rgba(255, 142, 127, 0.1) 60%,
       transparent 75%);
 }
 
-/* RIGHT (ENHANCED GREEN) */
 #torch-transition .right {
   right: -300px;
-
   background: radial-gradient(circle,
       rgba(192, 238, 145, 0.45) 0%,
       rgba(192, 238, 145, 0.25) 35%,
@@ -408,13 +399,11 @@ footer {
       transparent 75%);
 }
 
-/* ACTIVE SCALE BOOST */
 #torch-transition.active .blob {
   opacity: 1;
   transform: translateY(-50%) scale(1.6);
 }
 
-/* 💥 DISSOLVE EFFECT */
 #torch-transition.active .blob.left {
   animation: dissolveLeft 1s ease forwards;
 }
@@ -423,7 +412,6 @@ footer {
   animation: dissolveRight 1s ease forwards;
 }
 
-/* LEFT DISSOLVE */
 @keyframes dissolveLeft {
   0% {
     transform: translateY(-50%) scale(0.6);
@@ -440,7 +428,6 @@ footer {
   }
 }
 
-/* RIGHT DISSOLVE */
 @keyframes dissolveRight {
   0% {
     transform: translateY(-50%) scale(0.6);
@@ -471,9 +458,14 @@ footer {
 }
 
 /* ─── PAGE BLUR WHEN MENU OPENS ─── */
+/* FIX: Removed filter:blur from page-blur class.
+   CSS filter on a scrolling container creates a new stacking context and
+   compositing layer that interferes with -webkit-overflow-scrolling on iOS,
+   causing the scroll freeze. The menu backdrop already gives visual separation. */
 .page-blur {
-  filter: blur(8px);
-  transition: filter 0.4s ease;
+  /* filter: blur(8px); — REMOVED: causes iOS scroll compositing freeze */
+  transition: opacity 0.4s ease;
+  opacity: 0.4;
 }
 
 /* ─── LOADING TEXT MOBILE FIX ─── */
@@ -507,30 +499,40 @@ body {
     height: 300px !important;
     filter: blur(60px) !important;
   }
-}
 
+  /* FIX: Ensure hover/tilt animations with will-change don't create
+     stacking contexts that block native scroll on mobile */
+  .card,
+  .project-item,
+  .skill-card {
+    will-change: auto !important;
+    -webkit-transform: translateZ(0);
+    transform: translateZ(0);
+  }
+}
 
 /* ─── LOADING SCREEN BASE ─── */
 #loading-screen {
   opacity: 1;
   transition: opacity 1s ease;
-  /* smooth fade */
 }
 
 /* ─── QUICK MODE (FOR NEXT PAGES) ─── */
 #loading-screen.quick-mode {
   transition: opacity 1.5s ease;
-  /* slower smooth fade */
 }
 
-/* stop heavy animation in quick mode */
 #loading-screen.quick-mode h2,
 #loading-screen.quick-mode #mobile-line1,
 #loading-screen.quick-mode #mobile-line2 {
   animation: none !important;
 }
 
-/* keep subtitle visible */
 #loading-screen.quick-mode #loading-sub {
   opacity: 1 !important;
+}
+
+/* ─── FIX: iOS momentum scroll for page containers ─── */
+#page-content {
+  -webkit-overflow-scrolling: touch;
 }
