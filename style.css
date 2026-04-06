@@ -329,7 +329,7 @@ body.custom-cursor-active button {
 
 /* ─── BACKGROUND STAR PARTICLES ─── */
 #particle-bg {
-  position: fixed;
+  position: absolute;
   top: 0;
   left: 0;
   width: 100%;
@@ -507,4 +507,30 @@ body {
     height: 300px !important;
     filter: blur(60px) !important;
   }
+}
+
+
+/* ─── LOADING SCREEN BASE ─── */
+#loading-screen {
+  opacity: 1;
+  transition: opacity 1s ease;
+  /* smooth fade */
+}
+
+/* ─── QUICK MODE (FOR NEXT PAGES) ─── */
+#loading-screen.quick-mode {
+  transition: opacity 1.5s ease;
+  /* slower smooth fade */
+}
+
+/* stop heavy animation in quick mode */
+#loading-screen.quick-mode h2,
+#loading-screen.quick-mode #mobile-line1,
+#loading-screen.quick-mode #mobile-line2 {
+  animation: none !important;
+}
+
+/* keep subtitle visible */
+#loading-screen.quick-mode #loading-sub {
+  opacity: 1 !important;
 }

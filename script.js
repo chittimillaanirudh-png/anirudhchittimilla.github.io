@@ -1,3 +1,4 @@
+const isVisited = sessionStorage.getItem("visited");
 tailwind.config = {
     darkMode: "class",
     theme: {
@@ -423,7 +424,15 @@ document.addEventListener("DOMContentLoaded", () => {
 document.addEventListener("DOMContentLoaded", () => {
 
     const canvas = document.getElementById("loading-particles");
+    const isVisited = sessionStorage.getItem("visited");
+
     if (!canvas) return;
+
+    // ❌ If already visited → disable particles completely
+    if (isVisited) {
+        canvas.style.display = "none";
+        return;
+    }
 
     const ctx = canvas.getContext("2d");
 
@@ -520,11 +529,115 @@ document.addEventListener("DOMContentLoaded", () => {
     init();
     animate();
 
-    // 🧹 REMOVE after loading ends
-    const loading = document.getElementById("loading-screen");
-    setTimeout(() => {
-        if (canvas) canvas.style.opacity = "0";
-    }, 3000);
+    // ─── LOADING SCREEN PARTICLES (FIXED) ─────────────────
+    document.addEventListener("DOMContentLoaded", () => {
+
+        const canvas = document.getElementById("loading-particles");
+        if (!canvas) return;
+
+        // ✅ GLOBAL CHECK (same as loader)
+        const isVisited = sessionStorage.getItem("visited");
+
+        // ❌ If already visited → completely disable particles
+        if (isVisited) {
+            canvas.style.display = "none";
+            return;
+        }
+
+        const ctx = canvas.getContext("2d");
+
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+
+        let particles = [];
+        const count = 140;
+
+        let mouse = {
+            x: null,
+            y: null,
+            radius: 120
+        };
+
+        window.addEventListener("mousemove", (e) => {
+            mouse.x = e.clientX;
+            mouse.y = e.clientY;
+        });
+
+        class Particle {
+            constructor() {
+                this.x = Math.random() * canvas.width;
+                this.y = Math.random() * canvas.height;
+
+                this.size = Math.random() * 1.5 + 0.5;
+                this.baseSize = this.size;
+
+                this.speedX = Math.random() * 0.3 - 0.15;
+                this.speedY = Math.random() * 0.3 - 0.15;
+
+                this.color = Math.random() > 0.5 ? "#ff8e7f" : "#c0ee91";
+                this.opacity = Math.random() * 0.25 + 0.05;
+            }
+
+            update() {
+                this.x += this.speedX;
+                this.y += this.speedY;
+
+                if (this.x > canvas.width) this.x = 0;
+                if (this.x < 0) this.x = canvas.width;
+                if (this.y > canvas.height) this.y = 0;
+                if (this.y < 0) this.y = canvas.height;
+
+                const dx = this.x - mouse.x;
+                const dy = this.y - mouse.y;
+                const dist = Math.sqrt(dx * dx + dy * dy);
+
+                if (dist < mouse.radius) {
+                    this.size = this.baseSize + 1;
+                    this.opacity = 0.6;
+                } else {
+                    this.size = this.baseSize;
+                    this.opacity = 0.15;
+                }
+            }
+
+            draw() {
+                ctx.beginPath();
+                ctx.fillStyle = this.color;
+                ctx.globalAlpha = this.opacity;
+
+                ctx.shadowBlur = 12;
+                ctx.shadowColor = this.color;
+
+                ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+                ctx.fill();
+
+                ctx.shadowBlur = 0;
+                ctx.globalAlpha = 1;
+            }
+        }
+
+        function init() {
+            particles = [];
+            for (let i = 0; i < count; i++) {
+                particles.push(new Particle());
+            }
+        }
+
+        function animate() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            particles.forEach(p => {
+                p.update();
+                p.draw();
+            });
+
+            requestAnimationFrame(animate);
+        }
+
+        init();
+        animate();
+
+    });
 
 });
 
