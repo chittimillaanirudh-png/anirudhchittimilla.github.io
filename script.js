@@ -1,9 +1,26 @@
-// ─── SESSION VISIT TRACKING ─────────────────────────────────
-// Mark session as visited IMMEDIATELY (before anything else runs)
-const isVisited = sessionStorage.getItem("visited");
-if (!isVisited) {
-    sessionStorage.setItem("visited", "true");
-}
+// ─── NAVIGATION TYPE DETECTION ──────────────────────────────
+// Detects: first visit, reload, or internal navigation
+// Uses sessionStorage + performance.navigation (with fallback)
+
+(function () {
+    // Determine how the user arrived at this page
+    const navType = performance.getEntriesByType("navigation")[0]?.type
+        || (performance.navigation ? (performance.navigation.type === 1 ? "reload" : "navigate") : "navigate");
+
+    const isReload = navType === "reload";
+    const wasVisited = sessionStorage.getItem("ac_visited");
+
+    // Mark session as visited (persists across navigations, clears on tab close)
+    if (!wasVisited) {
+        sessionStorage.setItem("ac_visited", "true");
+    }
+
+    // Expose flags globally for use in DOMContentLoaded handlers
+    // showLoading: true only on first visit OR on page reload
+    // showBlink: true on every internal navigation (NOT on first load / reload)
+    window.__AC_SHOW_LOADING = !wasVisited || isReload;
+    window.__AC_SHOW_BLINK = !!wasVisited && !isReload;
+})();
 
 tailwind.config = {
     darkMode: "class",
@@ -115,10 +132,14 @@ document.addEventListener("DOMContentLoaded", () => {
 
     const transition = document.getElementById("torch-transition");
 
-    // Reverse on load (no double issue)
-    setTimeout(() => {
-        transition.classList.remove("active");
-    }, 100);
+    // If we should show the blink animation (internal navigation arrival),
+    // fire it briefly on load then remove
+    if (window.__AC_SHOW_BLINK) {
+        transition.classList.add("active");
+        setTimeout(() => {
+            transition.classList.remove("active");
+        }, 400);
+    }
 
     document.querySelectorAll("a").forEach(link => {
         link.addEventListener("click", e => {
@@ -145,21 +166,18 @@ document.addEventListener("DOMContentLoaded", () => {
 
 });
 
-// ─── LOADING SCREEN LOGIC (FIXED) ───────────────────────────
-// isVisited was read at the top of this file.
-// If already visited → hide loading screen immediately (no animation).
-// If first visit → let the CSS animation play normally.
+// ─── LOADING SCREEN LOGIC ────────────────────────────────────
+// showLoading is true on first visit OR reload → show loading animation
+// showLoading is false on internal navigation → hide loading screen immediately
 document.addEventListener("DOMContentLoaded", () => {
     const loadingScreen = document.getElementById("loading-screen");
     if (!loadingScreen) return;
 
-    if (isVisited) {
-        // Not first visit — hide loading screen instantly, no animation
+    if (!window.__AC_SHOW_LOADING) {
+        // Internal navigation: hide loading screen instantly, no animation
         loadingScreen.style.display = "none";
     }
-    // If first visit: the CSS animations on #loading-screen handle everything.
-    // The screen fades out via `animation: fade-out 1s ease-in-out 3.5s forwards`.
-    // Nothing extra needed.
+    // First visit or reload: CSS animations on #loading-screen handle everything naturally
 });
 
 // ─── ADVANCED CURSOR ────────────────────────────────────────
@@ -350,7 +368,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
     const ctx = canvas.getContext("2d");
 
-    // FIX: Use offsetParent's scroll height so canvas covers full page on mobile
     function resizeCanvas() {
         canvas.width = window.innerWidth;
         canvas.height = window.innerHeight;
@@ -447,8 +464,8 @@ document.addEventListener("DOMContentLoaded", () => {
     const canvas = document.getElementById("loading-particles");
     if (!canvas) return;
 
-    // If already visited → disable particles completely
-    if (isVisited) {
+    // Only show loading particles on first visit or reload
+    if (!window.__AC_SHOW_LOADING) {
         canvas.style.display = "none";
         return;
     }
@@ -545,7 +562,6 @@ document.addEventListener("DOMContentLoaded", () => {
     const btn = document.getElementById("menu-btn");
     const menu = document.getElementById("mobile-menu");
     const backdrop = document.getElementById("menu-backdrop");
-    const page = document.getElementById("page-content");
     if (!btn || !menu || !backdrop) return;
 
     let isOpen = false;
@@ -555,7 +571,6 @@ document.addEventListener("DOMContentLoaded", () => {
         menu.classList.add("translate-x-0");
         backdrop.classList.remove("pointer-events-none");
         backdrop.classList.add("opacity-100");
-        // FIX: Do NOT set overflow hidden on body — it breaks mobile scroll restoration
         isOpen = true;
     }
 
@@ -564,7 +579,6 @@ document.addEventListener("DOMContentLoaded", () => {
         menu.classList.remove("translate-x-0");
         backdrop.classList.add("pointer-events-none");
         backdrop.classList.remove("opacity-100");
-        // FIX: Removed page-blur to avoid filter causing scroll compositing issues on mobile
         document.body.style.overflow = "";
         isOpen = false;
     }

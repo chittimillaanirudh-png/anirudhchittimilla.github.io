@@ -46,12 +46,22 @@ body {
   max-width: 100vw;
   border-radius: 50%;
   filter: blur(120px);
-  z-index: -1;
+  /* FIX: Use z-index: 0 instead of z-index: -1.
+     z-index: -1 on position:absolute children of a non-positioned parent
+     can escape stacking context on some mobile browsers and block scroll hit-testing.
+     z-index: 0 + pointer-events: none is the safe combination. */
+  z-index: 0;
   opacity: 0.15;
   overflow: hidden;
   animation: subtle-pulse 10s infinite ease-in-out;
-  /* FIX: pointer-events none prevents ambient glows from blocking touch/scroll */
   pointer-events: none;
+  /* FIX: Force GPU compositing on the glow element itself so the browser
+     doesn't repaint the entire stacking context on each pulse tick.
+     This prevents the jank that was causing scroll freeze on about/projects. */
+  will-change: opacity, transform;
+  /* FIX: contain:strict prevents the glow's repaints from triggering
+     layout recalculations in the parent scroll container */
+  contain: layout style paint;
 }
 
 /* Specific glows used differently across pages */
@@ -117,7 +127,6 @@ body {
   inset: -10% -5%;
   background: radial-gradient(ellipse at center, rgba(201, 168, 76, 0.06) 0%, transparent 70%);
   z-index: 1;
-  /* FIX: Ensure this decorative element never blocks touch */
   pointer-events: none;
 }
 
@@ -134,7 +143,6 @@ body {
   height: 1px;
   background: linear-gradient(90deg, transparent, rgba(192, 238, 145, 0.2), transparent);
   width: 100%;
-  /* FIX: No touch blocking */
   pointer-events: none;
 }
 
@@ -335,8 +343,6 @@ body.custom-cursor-active button {
 /* ─── BACKGROUND STAR PARTICLES ─── */
 #particle-bg {
   position: fixed;
-  /* FIX: fixed instead of absolute — absolute on long pages only covers viewport height,
-                      causing a rendering gap that can stall touch-scroll compositing on mobile */
   top: 0;
   left: 0;
   width: 100%;
@@ -344,8 +350,6 @@ body.custom-cursor-active button {
   z-index: 0;
   pointer-events: none;
   opacity: 0.7;
-  /* FIX: Removed blur filter from canvas — even 0.3px blur forces GPU compositing layer
-     which causes stutter on mobile mid-scroll. Visual difference is imperceptible. */
 }
 
 main,
@@ -353,6 +357,20 @@ section,
 footer {
   position: relative;
   z-index: 2;
+}
+
+/* ─── FIX: #page-content must NOT be a scroll container itself ──
+   On about.html and projects.html, #page-content has min-h-screen.
+   If it gets overflow:hidden from any source it traps the scroll.
+   Explicitly allow overflow so the native body scroll is the scroller. */
+#page-content {
+  overflow: visible !important;
+  /* FIX: Do NOT set -webkit-overflow-scrolling:touch here.
+     That property only applies to elements that are themselves scrollable.
+     Applying it to a non-scrolling container creates an isolated compositing
+     layer that can intercept touch events before they reach the body scroller,
+     causing the mid-page freeze on about.html and projects.html. */
+  -webkit-overflow-scrolling: unset;
 }
 
 /* ─── DARK TORCH LIGHT TRANSITION ─── */
@@ -458,10 +476,6 @@ footer {
 }
 
 /* ─── PAGE BLUR WHEN MENU OPENS ─── */
-/* FIX: Removed filter:blur from page-blur class.
-   CSS filter on a scrolling container creates a new stacking context and
-   compositing layer that interferes with -webkit-overflow-scrolling on iOS,
-   causing the scroll freeze. The menu backdrop already gives visual separation. */
 .page-blur {
   /* filter: blur(8px); — REMOVED: causes iOS scroll compositing freeze */
   transition: opacity 0.4s ease;
@@ -492,22 +506,67 @@ body {
   overflow: hidden;
 }
 
-/* ✅ MOBILE FIX FOR SCROLL BREAK */
+/* ─── MOBILE SCROLL FREEZE FIXES ─── */
 @media (max-width: 768px) {
   .ambient-glow {
     width: 300px !important;
     height: 300px !important;
     filter: blur(60px) !important;
+    /* FIX: Disable the pulse animation on mobile entirely.
+       The subtle-pulse animation triggers a transform+opacity change every 10s.
+       On mobile, each animation tick forces the browser to re-evaluate
+       the compositing layer stack, which stalls the scroll thread mid-page.
+       Static glows look identical to animated ones on small screens. */
+    animation: none !important;
+    will-change: auto !important;
+    contain: layout style paint !important;
   }
 
-  /* FIX: Ensure hover/tilt animations with will-change don't create
-     stacking contexts that block native scroll on mobile */
+  /* FIX: Disable tilt/hover 3D transforms on mobile.
+     perspective() + rotateX/Y creates isolated compositing layers.
+     On about.html (bento grid) and projects.html (placeholder section),
+     multiple overlapping layers cause the GPU to drop frames during scroll,
+     which manifests as the mid-page freeze. */
   .card,
   .project-item,
   .skill-card {
     will-change: auto !important;
-    -webkit-transform: translateZ(0);
-    transform: translateZ(0);
+    transform: none !important;
+    -webkit-transform: none !important;
+  }
+
+  /* FIX: Remove backdrop-filter from elements deep in the scroll tree on mobile.
+     backdrop-blur on mid-page elements (bento cards, location cards)
+     forces full-page compositing on every scroll tick in WebKit.
+     The nav's backdrop-blur is fine because it's position:fixed (own layer).
+     For scrollable content cards, remove the blur entirely on mobile. */
+  .home-image-wrap,
+  .home-image-bg {
+    will-change: auto !important;
+  }
+
+  /* FIX: Ensure the page scroll container is the body, not #page-content.
+     min-h-screen on a div can sometimes make Safari/Chrome treat it as
+     a scroll root if it also has position:relative + any overflow quirk. */
+  #page-content {
+    min-height: auto !important;
+    overflow: visible !important;
+  }
+
+  /* FIX: Neutralize backdrop-blur on bento/grid cards on mobile.
+     These were contributing to the compositing layer explosion. */
+  [class*="backdrop-blur"] {
+    -webkit-backdrop-filter: none !important;
+    backdrop-filter: none !important;
+  }
+
+  /* Exception: keep backdrop-blur on nav and mobile-menu (fixed elements
+     that have their own compositing layer and don't affect scroll) */
+  nav[class*="backdrop-blur"],
+  #mobile-menu[class*="backdrop-blur"],
+  #menu-backdrop[class*="backdrop-blur"] {
+    -webkit-backdrop-filter: blur(12px) !important;
+    backdrop-filter: blur(12px) !important;
   }
 }
 
@@ -530,9 +589,4 @@ body {
 
 #loading-screen.quick-mode #loading-sub {
   opacity: 1 !important;
-}
-
-/* ─── FIX: iOS momentum scroll for page containers ─── */
-#page-content {
-  -webkit-overflow-scrolling: touch;
 }
