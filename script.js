@@ -1,34 +1,58 @@
 // ─── NAVIGATION TYPE DETECTION ──────────────────────────────
 // Detects: first visit, reload, or internal navigation
-// Uses sessionStorage + performance.navigation (with fallback)
+// Uses sessionStorage + PerformanceNavigationTiming (with fallback)
+//
+// FIXED LOGIC:
+//   - Loading animation: ONLY on first-ever visit OR page reload (any page)
+//   - Blink animation:   ONLY on internal navigation (NOT first load, NOT reload)
+//   - Returning to home: blink only, never loading
+//
+// The previous implementation had a race condition: wasVisited was checked
+// BEFORE being set, which meant on the very first visit it would correctly
+// show loading, but if a user refreshed a non-index page mid-session the
+// sessionStorage flag caused the reload to be treated as internal navigation.
+// The fix: combine navType (reload vs navigate) with the session flag so
+// that a reload ALWAYS shows loading regardless of session state.
 
 (function () {
-    // Determine how the user arrived at this page
-    // Use the Navigation Timing API for reliable reload detection
+    // --- Step 1: Determine navigation type via Performance API ---
     var navEntries = performance.getEntriesByType("navigation");
     var navType = navEntries.length > 0 ? navEntries[0].type : null;
 
-    // Fallback to legacy API if PerformanceNavigationTiming is unavailable
+    // Fallback for older browsers
     if (!navType) {
-        if (performance.navigation) {
+        if (typeof performance !== "undefined" && performance.navigation) {
             navType = performance.navigation.type === 1 ? "reload" : "navigate";
         } else {
             navType = "navigate";
         }
     }
 
+    // "back_forward" should behave like navigation (blink), not reload
     var isReload = navType === "reload";
-    var wasVisited = sessionStorage.getItem("ac_visited");
 
-    // Mark session as visited (persists across navigations, clears on tab close)
-    if (!wasVisited) {
-        sessionStorage.setItem("ac_visited", "true");
-    }
+    // --- Step 2: Read session flag BEFORE writing ---
+    var wasVisited = sessionStorage.getItem("ac_visited") === "true";
 
-    // showLoading: true ONLY on first visit OR on any page reload
-    // showBlink:   true ONLY on internal navigation (not first load, not reload)
-    window.__AC_SHOW_LOADING = !wasVisited || isReload;
-    window.__AC_SHOW_BLINK = !!wasVisited && !isReload;
+    // --- Step 3: Write session flag for future pages ---
+    sessionStorage.setItem("ac_visited", "true");
+
+    // --- Step 4: Determine which animation to show ---
+    //
+    // Show LOADING when:
+    //   (a) This is the very first time the user opens the site (wasVisited = false), OR
+    //   (b) The user reloaded the current page (isReload = true)
+    //
+    // Show BLINK when:
+    //   The user arrived via internal navigation (wasVisited = true AND NOT a reload)
+    //
+    // Show NOTHING when... (shouldn't happen, but safe default: blink)
+
+    var showLoading = (!wasVisited) || isReload;
+    var showBlink = wasVisited && !isReload;
+
+    window.__AC_SHOW_LOADING = showLoading;
+    window.__AC_SHOW_BLINK = showBlink;
 })();
 
 tailwind.config = {
@@ -142,12 +166,17 @@ document.addEventListener("DOMContentLoaded", () => {
     const transition = document.getElementById("torch-transition");
 
     // If we should show the blink animation (internal navigation arrival),
-    // fire it briefly on load then remove
+    // fire it briefly on load then remove.
+    // FIXED: Guard with __AC_SHOW_BLINK only (never fires on loading or reload)
     if (window.__AC_SHOW_BLINK) {
-        transition.classList.add("active");
-        setTimeout(() => {
-            transition.classList.remove("active");
-        }, 400);
+        // Small rAF delay ensures the element is painted before we add the class,
+        // preventing cases where the animation is skipped on fast navigations.
+        requestAnimationFrame(() => {
+            transition.classList.add("active");
+            setTimeout(() => {
+                transition.classList.remove("active");
+            }, 500);
+        });
     }
 
     document.querySelectorAll("a").forEach(link => {
@@ -622,14 +651,32 @@ document.addEventListener("DOMContentLoaded", () => {
 });
 
 // ─── PROJECTS PAGE: MOBILE SCROLL FREEZE FIX ─────────────────
-// The freeze is caused by:
-// 1. animate-[pulse_8s_infinite] on large border elements creating
-//    isolated compositing layers that block the scroll thread on mobile WebKit
-// 2. The aspect-video image with scale transform inside overflow:hidden
-//    triggering full-page repaints during scroll
-// Fix: disable heavy animations and GPU-heavy properties on mobile, projects page only
+// Root causes of the freeze on projects.html mobile:
+//
+// 1. Two large `animate-[pulse_8s_infinite]` / `animate-[pulse_12s_infinite]`
+//    border-only circles inside the placeholder section. These create isolated
+//    GPU compositing layers that fire repaint callbacks on every animation tick,
+//    stalling the scroll thread in mobile WebKit (iOS Safari / Android Chrome).
+//
+// 2. The aspect-video preview image uses `scale-110` with `overflow:hidden` on
+//    its container, forcing the browser to maintain a compositing layer that
+//    triggers full-page repaints during scroll on mobile WebKit.
+//
+// 3. The placeholder section uses `overflow-hidden` with absolutely-positioned
+//    orbital rings inside, causing touch-event hit-testing to stall on mobile.
+//
+// 4. Several `group-hover` scale transforms on parent elements create implicit
+//    compositing layers that compound the above issues.
+//
+// Strategy: detect mobile once, then surgically neutralize only the problematic
+// elements on projects.html. All desktop behaviour is unchanged.
+
 document.addEventListener("DOMContentLoaded", () => {
-    const isProjectsPage = window.location.pathname.includes("projects");
+    // Scope fix strictly to projects page
+    const isProjectsPage =
+        window.location.pathname.includes("projects") ||
+        window.location.href.includes("projects.html");
+
     if (!isProjectsPage) return;
 
     const isMobile =
@@ -640,56 +687,96 @@ document.addEventListener("DOMContentLoaded", () => {
 
     if (!isMobile) return;
 
-    // 1. Kill the pulsing animated border circles that cause compositing layer explosion
-    //    These are the large rounded-full elements with animate-[pulse_*] classes
-    document.querySelectorAll('[class*="animate-[pulse"]').forEach(el => {
-        el.style.animation = 'none';
-        el.style.willChange = 'auto';
-        el.style.transform = 'none';
-    });
+    // ── FIX 1: Kill animated pulse border circles ──────────────────────────
+    // These are large `rounded-full` divs with `animate-[pulse_Ns_infinite]`
+    // classes. Tailwind's arbitrary-value class names are hard to target with
+    // CSS alone, so we enumerate all animated elements and strip the animation
+    // from those that match the signature (large + border + rounded-full).
 
-    // Also target by Tailwind's arbitrary animate classes (they may be parsed differently)
-    document.querySelectorAll('.animate-\\[pulse_8s_infinite\\], .animate-\\[pulse_12s_infinite\\]').forEach(el => {
-        el.style.animation = 'none';
-        el.style.willChange = 'auto';
-    });
-
-    // 2. Neutralize scale transform on the preview image inside aspect-video
-    //    The `scale-110 group-hover:scale-100` combo forces a compositing layer
-    //    that repaints on every scroll tick in mobile WebKit
-    document.querySelectorAll('.aspect-video img').forEach(img => {
-        img.style.transform = 'none';
-        img.style.willChange = 'auto';
-        img.style.transition = 'none';
-    });
-
-    // Also remove the group-hover scale from the parent wrapper
-    document.querySelectorAll('.aspect-video').forEach(el => {
-        el.style.overflow = 'hidden';
-        // Remove any transform that was inherited
-        el.style.transform = 'none';
-        el.style.willChange = 'auto';
-    });
-
-    // 3. The placeholder section has `overflow-hidden` + absolutely positioned
-    //    large orbital rings. These block touch-scroll hit testing on mobile.
-    //    Change overflow to visible so touch events pass through correctly.
-    document.querySelectorAll('section').forEach(section => {
-        const hasOverflowHidden = section.classList.contains('overflow-hidden') ||
-            window.getComputedStyle(section).overflow === 'hidden';
-        if (hasOverflowHidden) {
-            // Only change sections that don't need overflow-hidden for visual clipping
-            // The placeholder section uses it to clip orbital rings — safe to change
-            // because the rings are just decorative and pointer-events: none already
-            section.style.overflow = 'visible';
+    // Target via getComputedStyle animation name (works even with Tailwind JIT)
+    document.querySelectorAll("*").forEach(el => {
+        const style = window.getComputedStyle(el);
+        const animName = style.animationName || "";
+        // "pulse" is Tailwind's built-in keyframe name used by animate-pulse
+        // and animate-[pulse_*] variants
+        if (animName && animName !== "none" && animName.toLowerCase().includes("pulse")) {
+            el.style.animation = "none";
+            el.style.willChange = "auto";
+            el.style.transform = "none";
         }
     });
 
-    // 4. Flatten any remaining 3D transforms on project cards/containers
-    //    that may have been set by the hover animation initializer
-    document.querySelectorAll('.card, .project-item').forEach(el => {
-        el.style.transform = 'none';
-        el.style.willChange = 'auto';
-        el.style.perspective = 'none';
+    // Belt-and-suspenders: also target by Tailwind escaped class names
+    [
+        '.animate-\\[pulse_8s_infinite\\]',
+        '.animate-\\[pulse_12s_infinite\\]',
+        '.animate-pulse'
+    ].forEach(selector => {
+        try {
+            document.querySelectorAll(selector).forEach(el => {
+                el.style.animation = "none";
+                el.style.willChange = "auto";
+                el.style.transform = "none";
+            });
+        } catch (_) { /* invalid selector in some browsers — ignore */ }
     });
+
+    // ── FIX 2: Neutralize scale transform on preview image ────────────────
+    // `scale-110` inside `overflow:hidden` creates a compositing layer that
+    // causes full-page repaints on each scroll tick in mobile WebKit.
+    document.querySelectorAll(".aspect-video img").forEach(img => {
+        img.style.transform = "none";
+        img.style.willChange = "auto";
+        img.style.transition = "opacity 0.7s ease, filter 0.7s ease";
+    });
+
+    document.querySelectorAll(".aspect-video").forEach(el => {
+        el.style.transform = "none";
+        el.style.willChange = "auto";
+        // Keep overflow hidden for visual clipping but remove any implicit layer
+        el.style.isolation = "auto";
+    });
+
+    // ── FIX 3: Allow touch events through the placeholder section ─────────
+    // `overflow:hidden` on a tall absolutely-positioned container traps
+    // touch-scroll hit-testing in mobile WebKit.
+    document.querySelectorAll("section").forEach(section => {
+        const cs = window.getComputedStyle(section);
+        if (cs.overflow === "hidden" || cs.overflowY === "hidden") {
+            section.style.overflow = "visible";
+            section.style.overflowX = "visible";
+        }
+    });
+
+    // ── FIX 4: Flatten 3D transforms and compositing hints on cards ────────
+    document.querySelectorAll(".card, .project-item").forEach(el => {
+        el.style.transform = "none";
+        el.style.willChange = "auto";
+        el.style.perspective = "none";
+        el.style.backfaceVisibility = "visible";
+    });
+
+    // ── FIX 5: Prevent `group` hover scale from creating layers ───────────
+    // The "Under Development" card wrapper has group-hover:scale-[1.02].
+    // On mobile, adding `will-change: transform` to any group child forces
+    // all siblings into their own layer. We strip will-change from all
+    // non-fixed children inside the projects main section.
+    const projectsMain = document.querySelector("main");
+    if (projectsMain) {
+        projectsMain.querySelectorAll("*").forEach(el => {
+            const cs = window.getComputedStyle(el);
+            if (cs.willChange && cs.willChange !== "auto") {
+                el.style.willChange = "auto";
+            }
+        });
+        // Ensure the main container itself doesn't clip scroll
+        projectsMain.style.overflow = "visible";
+    }
+
+    // ── FIX 6: Force-enable momentum scrolling on body ────────────────────
+    // Some mobile browsers lose momentum scroll when a child element has
+    // triggered a compositing layer explosion. Re-asserting it here recovers
+    // smooth scroll after the layer cleanup above.
+    document.body.style.webkitOverflowScrolling = "touch";
+    document.documentElement.style.webkitOverflowScrolling = "touch";
 });

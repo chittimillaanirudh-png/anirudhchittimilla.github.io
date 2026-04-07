@@ -46,21 +46,12 @@ body {
   max-width: 100vw;
   border-radius: 50%;
   filter: blur(120px);
-  /* FIX: Use z-index: 0 instead of z-index: -1.
-     z-index: -1 on position:absolute children of a non-positioned parent
-     can escape stacking context on some mobile browsers and block scroll hit-testing.
-     z-index: 0 + pointer-events: none is the safe combination. */
   z-index: 0;
   opacity: 0.15;
   overflow: hidden;
   animation: subtle-pulse 10s infinite ease-in-out;
   pointer-events: none;
-  /* FIX: Force GPU compositing on the glow element itself so the browser
-     doesn't repaint the entire stacking context on each pulse tick.
-     This prevents the jank that was causing scroll freeze on about/projects. */
   will-change: opacity, transform;
-  /* FIX: contain:strict prevents the glow's repaints from triggering
-     layout recalculations in the parent scroll container */
   contain: layout style paint;
 }
 
@@ -359,17 +350,9 @@ footer {
   z-index: 2;
 }
 
-/* ─── FIX: #page-content must NOT be a scroll container itself ──
-   On about.html and projects.html, #page-content has min-h-screen.
-   If it gets overflow:hidden from any source it traps the scroll.
-   Explicitly allow overflow so the native body scroll is the scroller. */
+/* ─── FIX: #page-content must NOT be a scroll container itself ── */
 #page-content {
   overflow: visible !important;
-  /* FIX: Do NOT set -webkit-overflow-scrolling:touch here.
-     That property only applies to elements that are themselves scrollable.
-     Applying it to a non-scrolling container creates an isolated compositing
-     layer that can intercept touch events before they reach the body scroller,
-     causing the mid-page freeze on about.html and projects.html. */
   -webkit-overflow-scrolling: unset;
 }
 
@@ -477,7 +460,6 @@ footer {
 
 /* ─── PAGE BLUR WHEN MENU OPENS ─── */
 .page-blur {
-  /* filter: blur(8px); — REMOVED: causes iOS scroll compositing freeze */
   transition: opacity 0.4s ease;
   opacity: 0.4;
 }
@@ -506,27 +488,17 @@ body {
   overflow: hidden;
 }
 
-/* ─── MOBILE SCROLL FREEZE FIXES ─── */
+/* ─── MOBILE SCROLL FREEZE FIXES (ALL PAGES) ─── */
 @media (max-width: 768px) {
   .ambient-glow {
     width: 300px !important;
     height: 300px !important;
     filter: blur(60px) !important;
-    /* FIX: Disable the pulse animation on mobile entirely.
-       The subtle-pulse animation triggers a transform+opacity change every 10s.
-       On mobile, each animation tick forces the browser to re-evaluate
-       the compositing layer stack, which stalls the scroll thread mid-page.
-       Static glows look identical to animated ones on small screens. */
     animation: none !important;
     will-change: auto !important;
     contain: layout style paint !important;
   }
 
-  /* FIX: Disable tilt/hover 3D transforms on mobile.
-     perspective() + rotateX/Y creates isolated compositing layers.
-     On about.html (bento grid) and projects.html (placeholder section),
-     multiple overlapping layers cause the GPU to drop frames during scroll,
-     which manifests as the mid-page freeze. */
   .card,
   .project-item,
   .skill-card {
@@ -535,33 +507,22 @@ body {
     -webkit-transform: none !important;
   }
 
-  /* FIX: Remove backdrop-filter from elements deep in the scroll tree on mobile.
-     backdrop-blur on mid-page elements (bento cards, location cards)
-     forces full-page compositing on every scroll tick in WebKit.
-     The nav's backdrop-blur is fine because it's position:fixed (own layer).
-     For scrollable content cards, remove the blur entirely on mobile. */
   .home-image-wrap,
   .home-image-bg {
     will-change: auto !important;
   }
 
-  /* FIX: Ensure the page scroll container is the body, not #page-content.
-     min-h-screen on a div can sometimes make Safari/Chrome treat it as
-     a scroll root if it also has position:relative + any overflow quirk. */
   #page-content {
     min-height: auto !important;
     overflow: visible !important;
   }
 
-  /* FIX: Neutralize backdrop-blur on bento/grid cards on mobile.
-     These were contributing to the compositing layer explosion. */
+  /* Remove backdrop-blur on scrollable content — keep on fixed elements */
   [class*="backdrop-blur"] {
     -webkit-backdrop-filter: none !important;
     backdrop-filter: none !important;
   }
 
-  /* Exception: keep backdrop-blur on nav and mobile-menu (fixed elements
-     that have their own compositing layer and don't affect scroll) */
   nav[class*="backdrop-blur"],
   #mobile-menu[class*="backdrop-blur"],
   #menu-backdrop[class*="backdrop-blur"] {
@@ -591,58 +552,76 @@ body {
   opacity: 1 !important;
 }
 
-/* ─── PROJECTS PAGE: MOBILE SCROLL FREEZE FIX ───────────────
-   Root cause 1: Large animate-[pulse_8s/12s_infinite] border circles
-   in the placeholder section create isolated GPU compositing layers.
-   On mobile WebKit, these layers are re-evaluated on every animation
-   tick during scroll, stalling the main thread → mid-page freeze.
+/* ════════════════════════════════════════════════════════════
+   PROJECTS PAGE — MOBILE SCROLL FREEZE FIX (CSS LAYER)
+   ════════════════════════════════════════════════════════════
+   These rules are the CSS safety net that works alongside the
+   JS fix in script.js. They target mobile (≤768px) only and
+   are scoped to elements that exist exclusively on projects.html.
 
-   Root cause 2: The aspect-video preview image uses scale-110 with
-   overflow:hidden on its container. This forces the browser to paint
-   the image into its own compositing layer and triggers full-page
-   repaints on every scroll tick in mobile Safari/Chrome WebKit.
-
-   These rules are the CSS safety net. The primary fix is in script.js
-   under "PROJECTS PAGE: MOBILE SCROLL FREEZE FIX" which disables the
-   animations via JS at runtime (required because Tailwind's arbitrary
-   value classes like animate-[pulse_8s_infinite] are not easily
-   overridable with static CSS selectors).
-
-   All rules below are scoped to ≤768px so desktop is untouched.
-   ──────────────────────────────────────────────────────────── */
+   ROOT CAUSE SUMMARY:
+   1. animate-[pulse_8s_infinite] / animate-[pulse_12s_infinite]
+      on large border circles → GPU compositing layer explosion
+   2. scale-110 on aspect-video img inside overflow:hidden
+      → full-page repaint on every scroll tick (mobile WebKit)
+   3. overflow:hidden on tall sections with abs-positioned children
+      → touch-scroll hit-testing stalls mid-page
+   ════════════════════════════════════════════════════════════ */
 
 @media (max-width: 768px) {
 
-  /* Neutralize scale transform on project preview images.
-     scale-110 forces a new GPU compositing layer. Inside overflow:hidden
-     this triggers full repaints on every scroll tick. */
+  /* ── FIX 1: Kill pulse animations on large decorative circles ──────────
+     Tailwind's animate-pulse and animate-[pulse_*] both use the "pulse"
+     keyframe. On mobile, these large border-only elements create isolated
+     compositing layers that re-evaluate on every animation tick, blocking
+     the scroll thread.
+     Using animation:none on rounded-full elements with border-only styling
+     is safe — they are purely decorative. */
+  .rounded-full[class*="animate-"],
+  .rounded-full[class*="border"][class*="animate"] {
+    animation: none !important;
+    will-change: auto !important;
+    transform: none !important;
+  }
+
+  /* ── FIX 2: Neutralize scale transform on project preview image ─────────
+     scale-110 inside overflow:hidden triggers full repaints on scroll.
+     Strip the scale; opacity/filter transitions are preserved. */
   .aspect-video img {
     transform: none !important;
     will-change: auto !important;
-    /* Keep hover effects — just strip the scale */
     transition: opacity 0.7s ease, filter 0.7s ease !important;
   }
 
-  /* Prevent the aspect-video container itself from creating layers */
   .aspect-video {
     will-change: auto !important;
     transform: none !important;
+    /* Keep overflow:hidden for visual clipping but remove 3D layer hints */
+    -webkit-transform: none !important;
   }
 
-  /* Ensure project page <main> doesn't clip touch scroll dispatch.
-     overflow:hidden on a tall non-fixed element containing absolutely
-     positioned children can trap touch events in mobile WebKit. */
-  main.relative {
-    overflow: visible !important;
-  }
-
-  /* The "Under Development" placeholder section has overflow-hidden
-     to clip the large orbital ring decorations. On mobile this creates
-     a scroll-blocking stacking context. Safe to remove since the rings
-     are pointer-events:none and purely decorative. */
+  /* ── FIX 3: Allow touch scroll through sections ─────────────────────────
+     The placeholder section has overflow:hidden to clip orbital ring
+     decorations. On mobile this creates a scroll-blocking stacking context.
+     Safe to open since the rings are pointer-events:none decorative elements.
+     Using min-h selectors to target the specific placeholder section. */
   .min-h-\[400px\],
   .min-h-\[500px\] {
     overflow: visible !important;
   }
 
+  /* ── FIX 4: Prevent main from clipping scroll dispatch ──────────────────
+     A relative-positioned main with overflow:hidden can intercept touch
+     events before they reach the body scroller on some mobile WebKit builds. */
+  main.relative {
+    overflow: visible !important;
+  }
+
+  /* ── FIX 5: Remove group-hover scale compositing hints from project cards ─
+     The "Under Development" bento card has group-hover:scale-[1.02].
+     Even without JavaScript triggering it, the browser may pre-allocate a
+     compositing layer for any element with a scale transition on mobile. */
+  .group:hover .group-hover\:scale-\[1\.02\] {
+    transform: none !important;
+  }
 }
