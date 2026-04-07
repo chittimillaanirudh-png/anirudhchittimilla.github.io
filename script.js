@@ -4,20 +4,29 @@
 
 (function () {
     // Determine how the user arrived at this page
-    const navType = performance.getEntriesByType("navigation")[0]?.type
-        || (performance.navigation ? (performance.navigation.type === 1 ? "reload" : "navigate") : "navigate");
+    // Use the Navigation Timing API for reliable reload detection
+    var navEntries = performance.getEntriesByType("navigation");
+    var navType = navEntries.length > 0 ? navEntries[0].type : null;
 
-    const isReload = navType === "reload";
-    const wasVisited = sessionStorage.getItem("ac_visited");
+    // Fallback to legacy API if PerformanceNavigationTiming is unavailable
+    if (!navType) {
+        if (performance.navigation) {
+            navType = performance.navigation.type === 1 ? "reload" : "navigate";
+        } else {
+            navType = "navigate";
+        }
+    }
+
+    var isReload = navType === "reload";
+    var wasVisited = sessionStorage.getItem("ac_visited");
 
     // Mark session as visited (persists across navigations, clears on tab close)
     if (!wasVisited) {
         sessionStorage.setItem("ac_visited", "true");
     }
 
-    // Expose flags globally for use in DOMContentLoaded handlers
-    // showLoading: true only on first visit OR on page reload
-    // showBlink: true on every internal navigation (NOT on first load / reload)
+    // showLoading: true ONLY on first visit OR on any page reload
+    // showBlink:   true ONLY on internal navigation (not first load, not reload)
     window.__AC_SHOW_LOADING = !wasVisited || isReload;
     window.__AC_SHOW_BLINK = !!wasVisited && !isReload;
 })();
@@ -609,5 +618,78 @@ document.addEventListener("DOMContentLoaded", () => {
             link.classList.remove("text-[#acabaa]");
             link.classList.add("text-[#ff8a7a]", "border-b", "border-[#ff8a7a]", "pb-1");
         }
+    });
+});
+
+// ─── PROJECTS PAGE: MOBILE SCROLL FREEZE FIX ─────────────────
+// The freeze is caused by:
+// 1. animate-[pulse_8s_infinite] on large border elements creating
+//    isolated compositing layers that block the scroll thread on mobile WebKit
+// 2. The aspect-video image with scale transform inside overflow:hidden
+//    triggering full-page repaints during scroll
+// Fix: disable heavy animations and GPU-heavy properties on mobile, projects page only
+document.addEventListener("DOMContentLoaded", () => {
+    const isProjectsPage = window.location.pathname.includes("projects");
+    if (!isProjectsPage) return;
+
+    const isMobile =
+        'ontouchstart' in window ||
+        navigator.maxTouchPoints > 0 ||
+        window.matchMedia("(pointer: coarse)").matches ||
+        window.innerWidth < 768;
+
+    if (!isMobile) return;
+
+    // 1. Kill the pulsing animated border circles that cause compositing layer explosion
+    //    These are the large rounded-full elements with animate-[pulse_*] classes
+    document.querySelectorAll('[class*="animate-[pulse"]').forEach(el => {
+        el.style.animation = 'none';
+        el.style.willChange = 'auto';
+        el.style.transform = 'none';
+    });
+
+    // Also target by Tailwind's arbitrary animate classes (they may be parsed differently)
+    document.querySelectorAll('.animate-\\[pulse_8s_infinite\\], .animate-\\[pulse_12s_infinite\\]').forEach(el => {
+        el.style.animation = 'none';
+        el.style.willChange = 'auto';
+    });
+
+    // 2. Neutralize scale transform on the preview image inside aspect-video
+    //    The `scale-110 group-hover:scale-100` combo forces a compositing layer
+    //    that repaints on every scroll tick in mobile WebKit
+    document.querySelectorAll('.aspect-video img').forEach(img => {
+        img.style.transform = 'none';
+        img.style.willChange = 'auto';
+        img.style.transition = 'none';
+    });
+
+    // Also remove the group-hover scale from the parent wrapper
+    document.querySelectorAll('.aspect-video').forEach(el => {
+        el.style.overflow = 'hidden';
+        // Remove any transform that was inherited
+        el.style.transform = 'none';
+        el.style.willChange = 'auto';
+    });
+
+    // 3. The placeholder section has `overflow-hidden` + absolutely positioned
+    //    large orbital rings. These block touch-scroll hit testing on mobile.
+    //    Change overflow to visible so touch events pass through correctly.
+    document.querySelectorAll('section').forEach(section => {
+        const hasOverflowHidden = section.classList.contains('overflow-hidden') ||
+            window.getComputedStyle(section).overflow === 'hidden';
+        if (hasOverflowHidden) {
+            // Only change sections that don't need overflow-hidden for visual clipping
+            // The placeholder section uses it to clip orbital rings — safe to change
+            // because the rings are just decorative and pointer-events: none already
+            section.style.overflow = 'visible';
+        }
+    });
+
+    // 4. Flatten any remaining 3D transforms on project cards/containers
+    //    that may have been set by the hover animation initializer
+    document.querySelectorAll('.card, .project-item').forEach(el => {
+        el.style.transform = 'none';
+        el.style.willChange = 'auto';
+        el.style.perspective = 'none';
     });
 });

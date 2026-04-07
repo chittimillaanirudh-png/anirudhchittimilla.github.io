@@ -590,3 +590,59 @@ body {
 #loading-screen.quick-mode #loading-sub {
   opacity: 1 !important;
 }
+
+/* ─── PROJECTS PAGE: MOBILE SCROLL FREEZE FIX ───────────────
+   Root cause 1: Large animate-[pulse_8s/12s_infinite] border circles
+   in the placeholder section create isolated GPU compositing layers.
+   On mobile WebKit, these layers are re-evaluated on every animation
+   tick during scroll, stalling the main thread → mid-page freeze.
+
+   Root cause 2: The aspect-video preview image uses scale-110 with
+   overflow:hidden on its container. This forces the browser to paint
+   the image into its own compositing layer and triggers full-page
+   repaints on every scroll tick in mobile Safari/Chrome WebKit.
+
+   These rules are the CSS safety net. The primary fix is in script.js
+   under "PROJECTS PAGE: MOBILE SCROLL FREEZE FIX" which disables the
+   animations via JS at runtime (required because Tailwind's arbitrary
+   value classes like animate-[pulse_8s_infinite] are not easily
+   overridable with static CSS selectors).
+
+   All rules below are scoped to ≤768px so desktop is untouched.
+   ──────────────────────────────────────────────────────────── */
+
+@media (max-width: 768px) {
+
+  /* Neutralize scale transform on project preview images.
+     scale-110 forces a new GPU compositing layer. Inside overflow:hidden
+     this triggers full repaints on every scroll tick. */
+  .aspect-video img {
+    transform: none !important;
+    will-change: auto !important;
+    /* Keep hover effects — just strip the scale */
+    transition: opacity 0.7s ease, filter 0.7s ease !important;
+  }
+
+  /* Prevent the aspect-video container itself from creating layers */
+  .aspect-video {
+    will-change: auto !important;
+    transform: none !important;
+  }
+
+  /* Ensure project page <main> doesn't clip touch scroll dispatch.
+     overflow:hidden on a tall non-fixed element containing absolutely
+     positioned children can trap touch events in mobile WebKit. */
+  main.relative {
+    overflow: visible !important;
+  }
+
+  /* The "Under Development" placeholder section has overflow-hidden
+     to clip the large orbital ring decorations. On mobile this creates
+     a scroll-blocking stacking context. Safe to remove since the rings
+     are pointer-events:none and purely decorative. */
+  .min-h-\[400px\],
+  .min-h-\[500px\] {
+    overflow: visible !important;
+  }
+
+}
