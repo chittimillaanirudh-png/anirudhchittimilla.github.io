@@ -1,25 +1,17 @@
 // ─── NAVIGATION TYPE DETECTION ──────────────────────────────
 // Detects: first visit, reload, or internal navigation
-// Uses sessionStorage + PerformanceNavigationTiming (with fallback)
 //
-// FIXED LOGIC:
-//   - Loading animation: ONLY on first-ever visit OR page reload (any page)
-//   - Blink animation:   ONLY on internal navigation (NOT first load, NOT reload)
-//   - Returning to home: blink only, never loading
+// Show LOADING when:
+//   (a) First-ever visit (wasVisited = false), OR
+//   (b) Page reload (isReload = true)
 //
-// The previous implementation had a race condition: wasVisited was checked
-// BEFORE being set, which meant on the very first visit it would correctly
-// show loading, but if a user refreshed a non-index page mid-session the
-// sessionStorage flag caused the reload to be treated as internal navigation.
-// The fix: combine navType (reload vs navigate) with the session flag so
-// that a reload ALWAYS shows loading regardless of session state.
+// Show BLINK when:
+//   Internal navigation (wasVisited = true AND NOT a reload)
 
 (function () {
-    // --- Step 1: Determine navigation type via Performance API ---
     var navEntries = performance.getEntriesByType("navigation");
     var navType = navEntries.length > 0 ? navEntries[0].type : null;
 
-    // Fallback for older browsers
     if (!navType) {
         if (typeof performance !== "undefined" && performance.navigation) {
             navType = performance.navigation.type === 1 ? "reload" : "navigate";
@@ -28,25 +20,9 @@
         }
     }
 
-    // "back_forward" should behave like navigation (blink), not reload
     var isReload = navType === "reload";
-
-    // --- Step 2: Read session flag BEFORE writing ---
     var wasVisited = sessionStorage.getItem("ac_visited") === "true";
-
-    // --- Step 3: Write session flag for future pages ---
     sessionStorage.setItem("ac_visited", "true");
-
-    // --- Step 4: Determine which animation to show ---
-    //
-    // Show LOADING when:
-    //   (a) This is the very first time the user opens the site (wasVisited = false), OR
-    //   (b) The user reloaded the current page (isReload = true)
-    //
-    // Show BLINK when:
-    //   The user arrived via internal navigation (wasVisited = true AND NOT a reload)
-    //
-    // Show NOTHING when... (shouldn't happen, but safe default: blink)
 
     var showLoading = (!wasVisited) || isReload;
     var showBlink = wasVisited && !isReload;
@@ -130,21 +106,13 @@ document.addEventListener("DOMContentLoaded", () => {
         if (!timeEl || !dateEl) return;
 
         const now = new Date();
-
         let hours = now.getHours();
         const minutes = now.getMinutes().toString().padStart(2, '0');
         const ampm = hours >= 12 ? 'PM' : 'AM';
-        hours = hours % 12;
-        hours = hours ? hours : 12;
-        const timeString = `${hours}:${minutes} ${ampm}`;
-
-        const options = { month: 'short', day: 'numeric', year: 'numeric' };
-        const dateString = now.toLocaleDateString('en-US', options).toUpperCase();
-
-        timeEl.textContent = timeString;
-        dateEl.textContent = dateString;
+        hours = hours % 12 || 12;
+        timeEl.textContent = `${hours}:${minutes} ${ampm}`;
+        dateEl.textContent = now.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }).toUpperCase();
     }
-
     updateTime();
     setInterval(updateTime, 1000);
 });
@@ -158,143 +126,111 @@ document.addEventListener("DOMContentLoaded", () => {
     <div id="torch-transition">
         <div class="blob left"></div>
         <div class="blob right"></div>
-    </div>
-    `;
-
+    </div>`;
     document.body.insertAdjacentHTML("beforeend", html);
-
     const transition = document.getElementById("torch-transition");
 
-    // If we should show the blink animation (internal navigation arrival),
-    // fire it briefly on load then remove.
-    // FIXED: Guard with __AC_SHOW_BLINK only (never fires on loading or reload)
+    // ── BLINK: Internal navigation arrival ──
+    // The user explicitly requested to REMOVE the second blink on arrival so it only blinks ONCE when clicking the link, and immediately shows the target page after load.
     if (window.__AC_SHOW_BLINK) {
-        // Small rAF delay ensures the element is painted before we add the class,
-        // preventing cases where the animation is skipped on fast navigations.
-        requestAnimationFrame(() => {
-            transition.classList.add("active");
-            setTimeout(() => {
-                transition.classList.remove("active");
-            }, 500);
-        });
+        // Do nothing on arrival to prevent the double animation.
     }
 
+    // ── Outbound navigation click → blink transition ──
     document.querySelectorAll("a").forEach(link => {
         link.addEventListener("click", e => {
-
             if (isTransitioning) return;
-
-            if (link.hostname === window.location.hostname && !link.hash && link.target !== "_blank") {
-                const special = link.href.startsWith("mailto:") || link.href.startsWith("tel:");
-
-                if (!special) {
-                    e.preventDefault();
-                    isTransitioning = true;
-
-                    transition.classList.add("active");
-
-                    setTimeout(() => {
-                        window.location.href = link.href;
-                    }, 1000);
-                }
+            if (
+                link.hostname === window.location.hostname &&
+                !link.hash &&
+                link.target !== "_blank" &&
+                !link.href.startsWith("mailto:") &&
+                !link.href.startsWith("tel:")
+            ) {
+                e.preventDefault();
+                isTransitioning = true;
+                transition.classList.add("active");
+                // Slightly longer exit (1100 ms was 1000 ms) — smoother handoff
+                setTimeout(() => {
+                    window.location.href = link.href;
+                }, 1100);
             }
-
         });
     });
-
 });
 
 // ─── LOADING SCREEN LOGIC ────────────────────────────────────
-// showLoading is true on first visit OR reload → show loading animation
-// showLoading is false on internal navigation → hide loading screen immediately
 document.addEventListener("DOMContentLoaded", () => {
     const loadingScreen = document.getElementById("loading-screen");
     if (!loadingScreen) return;
 
     if (!window.__AC_SHOW_LOADING) {
-        // Internal navigation: hide loading screen instantly, no animation
+        // Internal navigation: hide instantly — no flicker
+        loadingScreen.style.transition = "none";
+        loadingScreen.style.opacity = "0";
+        loadingScreen.style.visibility = "hidden";
         loadingScreen.style.display = "none";
     }
-    // First visit or reload: CSS animations on #loading-screen handle everything naturally
+    // First visit / reload: CSS keyframes on #loading-screen handle fade-out naturally.
+    // The CSS animation duration is extended in style.css for a smoother feel.
 });
 
 // ─── ADVANCED CURSOR ────────────────────────────────────────
 document.addEventListener("DOMContentLoaded", () => {
-
     const isTouchDevice =
         'ontouchstart' in window ||
         navigator.maxTouchPoints > 0 ||
         window.matchMedia("(pointer: coarse)").matches;
 
-    if (!isTouchDevice) {
-        if (!document.querySelector('.cursor')) {
-            const cursorEl = document.createElement('div');
-            cursorEl.className = 'cursor';
-            const followerEl = document.createElement('div');
-            followerEl.className = 'cursor-follower';
-            document.body.appendChild(cursorEl);
-            document.body.appendChild(followerEl);
-        }
+    if (isTouchDevice) return;
 
-        const cursor = document.querySelector('.cursor');
-        const follower = document.querySelector('.cursor-follower');
-
-        document.body.classList.add('custom-cursor-active');
-
-        let mouseX = 0, mouseY = 0, followerX = 0, followerY = 0;
-
-        document.addEventListener('mousemove', e => {
-            mouseX = e.clientX;
-            mouseY = e.clientY;
-
-            cursor.style.left = mouseX + 'px';
-            cursor.style.top = mouseY + 'px';
-        });
-
-        (function animateFollower() {
-            followerX += (mouseX - followerX) * 0.12;
-            followerY += (mouseY - followerY) * 0.12;
-
-            follower.style.left = followerX + 'px';
-            follower.style.top = followerY + 'px';
-
-            requestAnimationFrame(animateFollower);
-        })();
-
-        document.querySelectorAll('a, button, .social-link, .skill-card, .btn-primary, .btn-outline, input, textarea, .card, [role="button"]').forEach(el => {
-            el.addEventListener('mouseenter', () => {
-                cursor.classList.add('hover');
-                follower.classList.add('hover');
-            });
-
-            el.addEventListener('mouseleave', () => {
-                cursor.classList.remove('hover');
-                follower.classList.remove('hover');
-            });
-        });
-
-        document.addEventListener('mouseleave', () => {
-            cursor.style.opacity = '0';
-            follower.style.opacity = '0';
-        });
-
-        document.addEventListener('mouseenter', () => {
-            cursor.style.opacity = '1';
-            follower.style.opacity = '1';
-        });
+    if (!document.querySelector('.cursor')) {
+        const cursorEl = document.createElement('div');
+        cursorEl.className = 'cursor';
+        const followerEl = document.createElement('div');
+        followerEl.className = 'cursor-follower';
+        document.body.appendChild(cursorEl);
+        document.body.appendChild(followerEl);
     }
 
+    const cursor = document.querySelector('.cursor');
+    const follower = document.querySelector('.cursor-follower');
+    document.body.classList.add('custom-cursor-active');
+
+    let mouseX = 0, mouseY = 0, followerX = 0, followerY = 0;
+
+    document.addEventListener('mousemove', e => {
+        mouseX = e.clientX;
+        mouseY = e.clientY;
+        cursor.style.left = mouseX + 'px';
+        cursor.style.top = mouseY + 'px';
+    });
+
+    (function animateFollower() {
+        followerX += (mouseX - followerX) * 0.12;
+        followerY += (mouseY - followerY) * 0.12;
+        follower.style.left = followerX + 'px';
+        follower.style.top = followerY + 'px';
+        requestAnimationFrame(animateFollower);
+    })();
+
+    document.querySelectorAll('a, button, .social-link, .skill-card, .btn-primary, .btn-outline, input, textarea, .card, [role="button"]').forEach(el => {
+        el.addEventListener('mouseenter', () => { cursor.classList.add('hover'); follower.classList.add('hover'); });
+        el.addEventListener('mouseleave', () => { cursor.classList.remove('hover'); follower.classList.remove('hover'); });
+    });
+
+    document.addEventListener('mouseleave', () => { cursor.style.opacity = '0'; follower.style.opacity = '0'; });
+    document.addEventListener('mouseenter', () => { cursor.style.opacity = '1'; follower.style.opacity = '1'; });
 });
 
 // ─── SCROLL & HOVER ANIMATIONS ───────────────────────────────
 document.addEventListener("DOMContentLoaded", () => {
-    // Floating Elements
+    // Floating elements — mouse parallax
     const floatingElements = document.querySelectorAll('.float-element');
     if (floatingElements.length > 0) {
         document.addEventListener('mousemove', e => {
             const xPercent = (e.clientX / window.innerWidth) - 0.5;
             const yPercent = (e.clientY / window.innerHeight) - 0.5;
-
             floatingElements.forEach(el => {
                 const depth = parseFloat(el.getAttribute('data-depth')) || 20;
                 el.style.transform = `translate(${xPercent * depth}px, ${yPercent * depth}px)`;
@@ -302,14 +238,9 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     }
 
-    // Intersection Observer for Slide-in Animations
+    // Intersection Observer — slide-in
     const animElements = document.querySelectorAll('[data-animation]');
     if (animElements.length > 0) {
-        const observerOptions = {
-            threshold: 0.1,
-            rootMargin: '0px 0px -50px 0px'
-        };
-
         const observer = new IntersectionObserver(entries => {
             entries.forEach(entry => {
                 if (entry.isIntersecting) {
@@ -317,24 +248,22 @@ document.addEventListener("DOMContentLoaded", () => {
                     observer.unobserve(entry.target);
                 }
             });
-        }, observerOptions);
-
+        }, { threshold: 0.1, rootMargin: '0px 0px -50px 0px' });
         animElements.forEach(el => observer.observe(el));
     }
 
-    // Parallax
+    // Parallax scroll
     const parallaxElements = document.querySelectorAll('[data-parallax]');
     if (parallaxElements.length > 0) {
         window.addEventListener('scroll', () => {
             parallaxElements.forEach(el => {
-                const distance = window.pageYOffset;
-                const yPos = distance * (parseFloat(el.dataset.parallax) || 0.5);
+                const yPos = window.pageYOffset * (parseFloat(el.dataset.parallax) || 0.5);
                 el.style.transform = `translateY(${yPos}px)`;
             });
         });
     }
 
-    // Interactive Hover Lift & Smooth Zoom — desktop only
+    // Hover tilt — desktop only
     const isTouchDevice =
         'ontouchstart' in window ||
         navigator.maxTouchPoints > 0 ||
@@ -352,14 +281,8 @@ document.addEventListener("DOMContentLoaded", () => {
 
             card.addEventListener('mousemove', e => {
                 const rect = card.getBoundingClientRect();
-                const x = e.clientX - rect.left;
-                const y = e.clientY - rect.top;
-                const centerX = rect.width / 2;
-                const centerY = rect.height / 2;
-
-                const rotateX = (y - centerY) / -10;
-                const rotateY = (centerX - x) / -10;
-
+                const rotateX = ((e.clientY - rect.top) - rect.height / 2) / -10;
+                const rotateY = ((rect.width / 2) - (e.clientX - rect.left)) / -10;
                 card.style.transform = `perspective(1000px) rotateX(${rotateX}deg) rotateY(${rotateY}deg) translateZ(10px) scale(1.03)`;
             });
 
@@ -371,7 +294,7 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     }
 
-    // Intersection Observer for Smooth Viewport Zoom Reveal
+    // Viewport zoom reveal
     const zoomElements = document.querySelectorAll('.card, .project-item, .skill-card');
     if (zoomElements.length > 0) {
         zoomElements.forEach(el => {
@@ -403,66 +326,46 @@ document.addEventListener("DOMContentLoaded", () => {
 document.addEventListener("DOMContentLoaded", () => {
     const canvas = document.getElementById("particle-bg");
     if (!canvas) return;
-
     const ctx = canvas.getContext("2d");
 
     function resizeCanvas() {
         canvas.width = window.innerWidth;
         canvas.height = window.innerHeight;
     }
-
     resizeCanvas();
     window.addEventListener("resize", resizeCanvas);
 
     let particles = [];
-    const numParticles = window.innerWidth < 768 ? 40 : 120;
-
+    const numParticles = window.innerWidth < 768 ? 100 : 300;
     let mouse = { x: null, y: null, radius: 120 };
-
-    window.addEventListener("mousemove", (e) => {
-        mouse.x = e.clientX;
-        mouse.y = e.clientY;
-    });
+    window.addEventListener("mousemove", e => { mouse.x = e.clientX; mouse.y = e.clientY; });
 
     class Particle {
         constructor() {
             this.x = Math.random() * canvas.width;
             this.y = Math.random() * canvas.height;
-
             this.size = Math.random() * 1.5 + 0.5;
             this.baseSize = this.size;
-
-            this.speedX = Math.random() * 0.2 - 0.1;
-            this.speedY = Math.random() * 0.2 - 0.1;
-
+            this.speedX = Math.random() * 0.4 - 0.2;
+            this.speedY = Math.random() * 0.4 - 0.2;
             this.color = Math.random() > 0.5 ? "#ff8e7f" : "#c0ee91";
             this.opacity = Math.random() * 0.4 + 0.2;
         }
-
         update() {
             this.x += this.speedX;
             this.y += this.speedY;
-
             if (this.x > canvas.width) this.x = 0;
             if (this.x < 0) this.x = canvas.width;
             if (this.y > canvas.height) this.y = 0;
             if (this.y < 0) this.y = canvas.height;
 
-            if (mouse.x !== null && mouse.y !== null) {
-                const dx = this.x - mouse.x;
-                const dy = this.y - mouse.y;
-                const distance = Math.sqrt(dx * dx + dy * dy);
-
-                if (distance < mouse.radius) {
-                    this.size = this.baseSize + 1.5;
-                    this.opacity = 0.9;
-                } else {
-                    this.size = this.baseSize;
-                    this.opacity = 0.4;
-                }
+            if (mouse.x !== null) {
+                const dx = this.x - mouse.x, dy = this.y - mouse.y;
+                const dist = Math.sqrt(dx * dx + dy * dy);
+                this.size = dist < mouse.radius ? this.baseSize + 1.5 : this.baseSize;
+                this.opacity = dist < mouse.radius ? 0.9 : 0.4;
             }
         }
-
         draw() {
             ctx.beginPath();
             ctx.shadowBlur = 10;
@@ -478,90 +381,62 @@ document.addEventListener("DOMContentLoaded", () => {
 
     function init() {
         particles = [];
-        for (let i = 0; i < numParticles; i++) {
-            particles.push(new Particle());
-        }
+        for (let i = 0; i < numParticles; i++) particles.push(new Particle());
     }
-
     function animate() {
         ctx.clearRect(0, 0, canvas.width, canvas.height);
-        particles.forEach(p => {
-            p.update();
-            p.draw();
-        });
+        particles.forEach(p => { p.update(); p.draw(); });
         requestAnimationFrame(animate);
     }
-
     init();
     animate();
 });
 
 // ─── LOADING SCREEN PARTICLES (TEXT REACTION) ─────────────────
 document.addEventListener("DOMContentLoaded", () => {
-
     const canvas = document.getElementById("loading-particles");
     if (!canvas) return;
 
-    // Only show loading particles on first visit or reload
     if (!window.__AC_SHOW_LOADING) {
         canvas.style.display = "none";
         return;
     }
 
     const ctx = canvas.getContext("2d");
-
     canvas.width = window.innerWidth;
     canvas.height = window.innerHeight;
 
     let particles = [];
-    const count = 140;
-
+    const count = 250;
     let mouse = { x: null, y: null, radius: 120 };
-
-    window.addEventListener("mousemove", (e) => {
-        mouse.x = e.clientX;
-        mouse.y = e.clientY;
-    });
+    window.addEventListener("mousemove", e => { mouse.x = e.clientX; mouse.y = e.clientY; });
 
     class Particle {
         constructor() {
             this.x = Math.random() * canvas.width;
             this.y = Math.random() * canvas.height;
-
             this.size = Math.random() * 1.5 + 0.5;
             this.baseSize = this.size;
-
-            this.speedX = Math.random() * 0.3 - 0.15;
-            this.speedY = Math.random() * 0.3 - 0.15;
-
+            this.speedX = Math.random() * 0.6 - 0.3;
+            this.speedY = Math.random() * 0.6 - 0.3;
             this.color = Math.random() > 0.5 ? "#ff8e7f" : "#c0ee91";
             this.opacity = Math.random() * 0.25 + 0.05;
         }
-
         update() {
             this.x += this.speedX;
             this.y += this.speedY;
-
             if (this.x > canvas.width) this.x = 0;
             if (this.x < 0) this.x = canvas.width;
             if (this.y > canvas.height) this.y = 0;
             if (this.y < 0) this.y = canvas.height;
 
-            if (mouse.x !== null && mouse.y !== null) {
-                const dx = this.x - mouse.x;
-                const dy = this.y - mouse.y;
+            if (mouse.x !== null) {
+                const dx = this.x - mouse.x, dy = this.y - mouse.y;
                 const dist = Math.sqrt(dx * dx + dy * dy);
-
-                if (dist < mouse.radius) {
-                    this.size = this.baseSize + 1;
-                    this.opacity = 0.6;
-                } else {
-                    this.size = this.baseSize;
-                    this.opacity = 0.15;
-                }
+                this.size = dist < mouse.radius ? this.baseSize + 1 : this.baseSize;
+                this.opacity = dist < mouse.radius ? 0.6 : 0.15;
             }
         }
-
         draw() {
             ctx.beginPath();
             ctx.fillStyle = this.color;
@@ -575,22 +450,12 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     }
 
-    function init() {
-        particles = [];
-        for (let i = 0; i < count; i++) {
-            particles.push(new Particle());
-        }
-    }
-
+    function init() { particles = []; for (let i = 0; i < count; i++) particles.push(new Particle()); }
     function animate() {
         ctx.clearRect(0, 0, canvas.width, canvas.height);
-        particles.forEach(p => {
-            p.update();
-            p.draw();
-        });
+        particles.forEach(p => { p.update(); p.draw(); });
         requestAnimationFrame(animate);
     }
-
     init();
     animate();
 });
@@ -611,7 +476,6 @@ document.addEventListener("DOMContentLoaded", () => {
         backdrop.classList.add("opacity-100");
         isOpen = true;
     }
-
     function closeMenu() {
         menu.classList.add("translate-x-full");
         menu.classList.remove("translate-x-0");
@@ -621,29 +485,17 @@ document.addEventListener("DOMContentLoaded", () => {
         isOpen = false;
     }
 
-    btn.addEventListener("click", () => {
-        if (!isOpen) {
-            openMenu();
-        } else {
-            closeMenu();
-        }
-    });
-
+    btn.addEventListener("click", () => isOpen ? closeMenu() : openMenu());
     backdrop.addEventListener("click", closeMenu);
-
-    menu.querySelectorAll("a").forEach(link => {
-        link.addEventListener("click", closeMenu);
-    });
+    menu.querySelectorAll("a").forEach(link => link.addEventListener("click", closeMenu));
 });
 
 // ─── ACTIVE NAV LINK ─────────────────────────────────────────
 document.addEventListener("DOMContentLoaded", () => {
     const links = document.querySelectorAll(".nav-link");
     const currentPage = window.location.pathname.split("/").pop();
-
     links.forEach(link => {
-        const linkPage = link.getAttribute("href");
-        if (linkPage === currentPage) {
+        if (link.getAttribute("href") === currentPage) {
             link.classList.remove("text-[#acabaa]");
             link.classList.add("text-[#ff8a7a]", "border-b", "border-[#ff8a7a]", "pb-1");
         }
@@ -651,28 +503,7 @@ document.addEventListener("DOMContentLoaded", () => {
 });
 
 // ─── PROJECTS PAGE: MOBILE SCROLL FREEZE FIX ─────────────────
-// Root causes of the freeze on projects.html mobile:
-//
-// 1. Two large `animate-[pulse_8s_infinite]` / `animate-[pulse_12s_infinite]`
-//    border-only circles inside the placeholder section. These create isolated
-//    GPU compositing layers that fire repaint callbacks on every animation tick,
-//    stalling the scroll thread in mobile WebKit (iOS Safari / Android Chrome).
-//
-// 2. The aspect-video preview image uses `scale-110` with `overflow:hidden` on
-//    its container, forcing the browser to maintain a compositing layer that
-//    triggers full-page repaints during scroll on mobile WebKit.
-//
-// 3. The placeholder section uses `overflow-hidden` with absolutely-positioned
-//    orbital rings inside, causing touch-event hit-testing to stall on mobile.
-//
-// 4. Several `group-hover` scale transforms on parent elements create implicit
-//    compositing layers that compound the above issues.
-//
-// Strategy: detect mobile once, then surgically neutralize only the problematic
-// elements on projects.html. All desktop behaviour is unchanged.
-
 document.addEventListener("DOMContentLoaded", () => {
-    // Scope fix strictly to projects page
     const isProjectsPage =
         window.location.pathname.includes("projects") ||
         window.location.href.includes("projects.html");
@@ -687,18 +518,9 @@ document.addEventListener("DOMContentLoaded", () => {
 
     if (!isMobile) return;
 
-    // ── FIX 1: Kill animated pulse border circles ──────────────────────────
-    // These are large `rounded-full` divs with `animate-[pulse_Ns_infinite]`
-    // classes. Tailwind's arbitrary-value class names are hard to target with
-    // CSS alone, so we enumerate all animated elements and strip the animation
-    // from those that match the signature (large + border + rounded-full).
-
-    // Target via getComputedStyle animation name (works even with Tailwind JIT)
     document.querySelectorAll("*").forEach(el => {
         const style = window.getComputedStyle(el);
         const animName = style.animationName || "";
-        // "pulse" is Tailwind's built-in keyframe name used by animate-pulse
-        // and animate-[pulse_*] variants
         if (animName && animName !== "none" && animName.toLowerCase().includes("pulse")) {
             el.style.animation = "none";
             el.style.willChange = "auto";
@@ -706,7 +528,6 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     });
 
-    // Belt-and-suspenders: also target by Tailwind escaped class names
     [
         '.animate-\\[pulse_8s_infinite\\]',
         '.animate-\\[pulse_12s_infinite\\]',
@@ -718,12 +539,9 @@ document.addEventListener("DOMContentLoaded", () => {
                 el.style.willChange = "auto";
                 el.style.transform = "none";
             });
-        } catch (_) { /* invalid selector in some browsers — ignore */ }
+        } catch (_) { }
     });
 
-    // ── FIX 2: Neutralize scale transform on preview image ────────────────
-    // `scale-110` inside `overflow:hidden` creates a compositing layer that
-    // causes full-page repaints on each scroll tick in mobile WebKit.
     document.querySelectorAll(".aspect-video img").forEach(img => {
         img.style.transform = "none";
         img.style.willChange = "auto";
@@ -733,13 +551,9 @@ document.addEventListener("DOMContentLoaded", () => {
     document.querySelectorAll(".aspect-video").forEach(el => {
         el.style.transform = "none";
         el.style.willChange = "auto";
-        // Keep overflow hidden for visual clipping but remove any implicit layer
         el.style.isolation = "auto";
     });
 
-    // ── FIX 3: Allow touch events through the placeholder section ─────────
-    // `overflow:hidden` on a tall absolutely-positioned container traps
-    // touch-scroll hit-testing in mobile WebKit.
     document.querySelectorAll("section").forEach(section => {
         const cs = window.getComputedStyle(section);
         if (cs.overflow === "hidden" || cs.overflowY === "hidden") {
@@ -748,7 +562,6 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     });
 
-    // ── FIX 4: Flatten 3D transforms and compositing hints on cards ────────
     document.querySelectorAll(".card, .project-item").forEach(el => {
         el.style.transform = "none";
         el.style.willChange = "auto";
@@ -756,27 +569,30 @@ document.addEventListener("DOMContentLoaded", () => {
         el.style.backfaceVisibility = "visible";
     });
 
-    // ── FIX 5: Prevent `group` hover scale from creating layers ───────────
-    // The "Under Development" card wrapper has group-hover:scale-[1.02].
-    // On mobile, adding `will-change: transform` to any group child forces
-    // all siblings into their own layer. We strip will-change from all
-    // non-fixed children inside the projects main section.
     const projectsMain = document.querySelector("main");
     if (projectsMain) {
         projectsMain.querySelectorAll("*").forEach(el => {
-            const cs = window.getComputedStyle(el);
-            if (cs.willChange && cs.willChange !== "auto") {
+            if (window.getComputedStyle(el).willChange !== "auto") {
                 el.style.willChange = "auto";
             }
         });
-        // Ensure the main container itself doesn't clip scroll
         projectsMain.style.overflow = "visible";
     }
 
-    // ── FIX 6: Force-enable momentum scrolling on body ────────────────────
-    // Some mobile browsers lose momentum scroll when a child element has
-    // triggered a compositing layer explosion. Re-asserting it here recovers
-    // smooth scroll after the layer cleanup above.
+    const fixedExempt = new Set([
+        document.querySelector("nav"),
+        document.getElementById("mobile-menu"),
+        document.getElementById("menu-backdrop"),
+        document.querySelector(".fixed.top-28")
+    ]);
+
+    document.querySelectorAll('[class*="backdrop-blur"]').forEach(el => {
+        if (!fixedExempt.has(el)) {
+            el.style.webkitBackdropFilter = "none";
+            el.style.backdropFilter = "none";
+        }
+    });
+
     document.body.style.webkitOverflowScrolling = "touch";
     document.documentElement.style.webkitOverflowScrolling = "touch";
 });

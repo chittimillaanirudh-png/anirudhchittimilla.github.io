@@ -13,17 +13,7 @@ body {
   font-variation-settings: 'FILL' 0, 'wght' 300, 'GRAD' 0, 'opsz' 24;
 }
 
-.grain-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100vw;
-  height: 100vh;
-  opacity: 0.03;
-  z-index: 9999;
-  pointer-events: none;
-  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
-}
+
 
 @keyframes subtle-pulse {
 
@@ -39,26 +29,7 @@ body {
   }
 }
 
-.ambient-glow {
-  position: absolute;
-  width: 600px;
-  height: 600px;
-  max-width: 100vw;
-  border-radius: 50%;
-  filter: blur(120px);
-  z-index: 0;
-  opacity: 0.15;
-  overflow: hidden;
-  animation: subtle-pulse 10s infinite ease-in-out;
-  pointer-events: none;
-  will-change: opacity, transform;
-  contain: layout style paint;
-}
 
-/* Specific glows used differently across pages */
-.ambient-glow.fixed {
-  position: fixed;
-}
 
 .signature-gradient,
 .hero-gradient,
@@ -90,21 +61,16 @@ body {
   object-fit: cover;
   position: relative;
   z-index: 2;
-
   -webkit-mask-image:
     linear-gradient(to bottom, transparent 0%, black 8%, black 85%, transparent 100%),
     linear-gradient(to right, transparent 0%, black 8%),
     linear-gradient(to left, transparent 0%, black 8%);
-
   -webkit-mask-composite: intersect;
-
   mask-image:
     linear-gradient(to bottom, transparent 0%, black 8%, black 85%, transparent 100%),
     linear-gradient(to right, transparent 0%, black 8%),
     linear-gradient(to left, transparent 0%, black 8%);
-
   mask-composite: intersect;
-
   filter: brightness(0.88) contrast(1.05) grayscale(100%);
   transition: filter 0.7s ease-in-out;
 }
@@ -113,13 +79,7 @@ body {
   filter: brightness(0.88) contrast(1.05) grayscale(0%);
 }
 
-.home-image-bg {
-  position: absolute;
-  inset: -10% -5%;
-  background: radial-gradient(ellipse at center, rgba(201, 168, 76, 0.06) 0%, transparent 70%);
-  z-index: 1;
-  pointer-events: none;
-}
+
 
 .orbital-path {
   position: absolute;
@@ -350,14 +310,12 @@ footer {
   z-index: 2;
 }
 
-/* ─── FIX: #page-content must NOT be a scroll container itself ── */
 #page-content {
   overflow: visible !important;
   -webkit-overflow-scrolling: unset;
 }
 
 /* ─── DARK TORCH LIGHT TRANSITION ─── */
-
 #torch-transition {
   position: fixed;
   top: 0;
@@ -378,7 +336,8 @@ footer {
   border-radius: 50%;
   filter: blur(70px);
   opacity: 0;
-  transition: all 1.2s cubic-bezier(0.7, 0, 0.2, 1);
+  /* Increased to 1.4 s (was 1.2 s) for a smoother, more fluid transition */
+  transition: all 1.4s cubic-bezier(0.7, 0, 0.2, 1);
   pointer-events: none;
 }
 
@@ -406,25 +365,27 @@ footer {
 }
 
 #torch-transition.active .blob.left {
-  animation: dissolveLeft 1s ease forwards;
+  animation: dissolveLeft 1.2s ease forwards;
 }
 
 #torch-transition.active .blob.right {
-  animation: dissolveRight 1s ease forwards;
+  animation: dissolveRight 1.2s ease forwards;
 }
 
+/* Slightly longer dissolve (1.2 s was 1 s) → smoother blink */
 @keyframes dissolveLeft {
   0% {
     transform: translateY(-50%) scale(0.6);
+    opacity: 0;
   }
 
-  50% {
-    transform: translateY(-50%) scale(1.6);
+  40% {
+    transform: translateY(-50%) scale(1.5);
     opacity: 1;
   }
 
   100% {
-    transform: translateY(-50%) scale(2);
+    transform: translateY(-50%) scale(2.0);
     opacity: 0;
   }
 }
@@ -432,15 +393,16 @@ footer {
 @keyframes dissolveRight {
   0% {
     transform: translateY(-50%) scale(0.6);
+    opacity: 0;
   }
 
-  50% {
-    transform: translateY(-50%) scale(1.6);
+  40% {
+    transform: translateY(-50%) scale(1.5);
     opacity: 1;
   }
 
   100% {
-    transform: translateY(-50%) scale(2);
+    transform: translateY(-50%) scale(2.0);
     opacity: 0;
   }
 }
@@ -481,23 +443,11 @@ body {
   overflow-x: hidden;
 }
 
-/* Prevent large elements overflow */
-.ambient-glow,
-.orbital-path {
-  max-width: 100vw;
-  overflow: hidden;
-}
+
 
 /* ─── MOBILE SCROLL FREEZE FIXES (ALL PAGES) ─── */
 @media (max-width: 768px) {
-  .ambient-glow {
-    width: 300px !important;
-    height: 300px !important;
-    filter: blur(60px) !important;
-    animation: none !important;
-    will-change: auto !important;
-    contain: layout style paint !important;
-  }
+
 
   .card,
   .project-item,
@@ -531,13 +481,54 @@ body {
   }
 }
 
-/* ─── LOADING SCREEN BASE ─── */
+/* ─── LOADING SCREEN ─── */
+/*
+   Extended timing (was 3.5 s fade-out, now 4.2 s) gives the typing animation
+   room to breathe and makes the reveal feel premium rather than rushed.
+   The loading-bar CSS animation is extended to match in the inline <style>
+   block inside index.html — that block references a 3.5 s duration.
+   We override the fade-out here; the bar animation lives in index.html's
+   <style> tag and must be updated there to stay in sync.
+*/
 #loading-screen {
   opacity: 1;
-  transition: opacity 1s ease;
+  /* Smooth cubic-ease-out for the fade (was linear) */
+  animation: fade-out-screen 1.2s cubic-bezier(0.4, 0, 0.2, 1) 4.0s forwards;
+  pointer-events: auto;
 }
 
-/* ─── QUICK MODE (FOR NEXT PAGES) ─── */
+@keyframes fade-out-screen {
+  0% {
+    opacity: 1;
+    visibility: visible;
+    pointer-events: auto;
+  }
+
+  100% {
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+  }
+}
+
+/* Sub-title fade-in (extended from 1 s → 1.4 s, delayed 2 s → 2.2 s) */
+#loading-sub {
+  animation: fade-in-sub 1.4s ease-out 2.2s forwards;
+  opacity: 0;
+}
+
+@keyframes fade-in-sub {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
 #loading-screen.quick-mode {
   transition: opacity 1.5s ease;
 }
@@ -554,29 +545,10 @@ body {
 
 /* ════════════════════════════════════════════════════════════
    PROJECTS PAGE — MOBILE SCROLL FREEZE FIX (CSS LAYER)
-   ════════════════════════════════════════════════════════════
-   These rules are the CSS safety net that works alongside the
-   JS fix in script.js. They target mobile (≤768px) only and
-   are scoped to elements that exist exclusively on projects.html.
-
-   ROOT CAUSE SUMMARY:
-   1. animate-[pulse_8s_infinite] / animate-[pulse_12s_infinite]
-      on large border circles → GPU compositing layer explosion
-   2. scale-110 on aspect-video img inside overflow:hidden
-      → full-page repaint on every scroll tick (mobile WebKit)
-   3. overflow:hidden on tall sections with abs-positioned children
-      → touch-scroll hit-testing stalls mid-page
    ════════════════════════════════════════════════════════════ */
-
 @media (max-width: 768px) {
 
-  /* ── FIX 1: Kill pulse animations on large decorative circles ──────────
-     Tailwind's animate-pulse and animate-[pulse_*] both use the "pulse"
-     keyframe. On mobile, these large border-only elements create isolated
-     compositing layers that re-evaluate on every animation tick, blocking
-     the scroll thread.
-     Using animation:none on rounded-full elements with border-only styling
-     is safe — they are purely decorative. */
+  /* FIX 1: Kill all pulse animations on large decorative circles */
   .rounded-full[class*="animate-"],
   .rounded-full[class*="border"][class*="animate"] {
     animation: none !important;
@@ -584,9 +556,7 @@ body {
     transform: none !important;
   }
 
-  /* ── FIX 2: Neutralize scale transform on project preview image ─────────
-     scale-110 inside overflow:hidden triggers full repaints on scroll.
-     Strip the scale; opacity/filter transitions are preserved. */
+  /* FIX 2: Remove scale transform from preview image */
   .aspect-video img {
     transform: none !important;
     will-change: auto !important;
@@ -596,32 +566,32 @@ body {
   .aspect-video {
     will-change: auto !important;
     transform: none !important;
-    /* Keep overflow:hidden for visual clipping but remove 3D layer hints */
     -webkit-transform: none !important;
   }
 
-  /* ── FIX 3: Allow touch scroll through sections ─────────────────────────
-     The placeholder section has overflow:hidden to clip orbital ring
-     decorations. On mobile this creates a scroll-blocking stacking context.
-     Safe to open since the rings are pointer-events:none decorative elements.
-     Using min-h selectors to target the specific placeholder section. */
+  /* FIX 3: Allow touch scroll through overflow:hidden sections */
   .min-h-\[400px\],
   .min-h-\[500px\] {
     overflow: visible !important;
   }
 
-  /* ── FIX 4: Prevent main from clipping scroll dispatch ──────────────────
-     A relative-positioned main with overflow:hidden can intercept touch
-     events before they reach the body scroller on some mobile WebKit builds. */
+  /* FIX 4: Prevent main from blocking scroll dispatch */
   main.relative {
     overflow: visible !important;
   }
 
-  /* ── FIX 5: Remove group-hover scale compositing hints from project cards ─
-     The "Under Development" bento card has group-hover:scale-[1.02].
-     Even without JavaScript triggering it, the browser may pre-allocate a
-     compositing layer for any element with a scale transition on mobile. */
+  /* FIX 5: Remove group-hover scale pre-allocation */
   .group:hover .group-hover\:scale-\[1\.02\] {
     transform: none !important;
+  }
+
+  /* FIX 6: Strip backdrop-blur from non-fixed page elements
+     to eliminate GPU compositing overhead on mobile scroll.
+     nav/menu/backdrop retain their blur via the rule above.    */
+  main [class*="backdrop-blur"],
+  section [class*="backdrop-blur"],
+  footer [class*="backdrop-blur"] {
+    -webkit-backdrop-filter: none !important;
+    backdrop-filter: none !important;
   }
 }
