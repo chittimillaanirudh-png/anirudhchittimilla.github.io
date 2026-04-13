@@ -1,0 +1,642 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+html {
+  overflow-x: hidden;
+}
+
+body {
+  background-color: #0e0e0e;
+  overflow-x: hidden;
+  overflow-y: auto;
+  position: relative;
+}
+
+.material-symbols-outlined {
+  font-variation-settings: 'FILL' 0, 'wght' 300, 'GRAD' 0, 'opsz' 24;
+}
+
+@keyframes subtle-pulse {
+
+  0%,
+  100% {
+    opacity: 0.4;
+    transform: scale(1);
+  }
+
+  50% {
+    opacity: 0.6;
+    transform: scale(1.05);
+  }
+}
+
+.signature-gradient,
+.hero-gradient,
+.gradient-text {
+  background: linear-gradient(45deg, #f3a77d, #ff8a7a, #c0ee91);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  color: transparent;
+}
+
+.home-right {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.home-image-wrap {
+  position: relative;
+  width: 100%;
+  max-width: 480px;
+}
+
+.home-image-wrap img {
+  width: 100%;
+  height: auto;
+  display: block;
+  object-fit: cover;
+  position: relative;
+  z-index: 2;
+  -webkit-mask-image:
+    linear-gradient(to bottom, transparent 0%, black 8%, black 85%, transparent 100%),
+    linear-gradient(to right, transparent 0%, black 8%),
+    linear-gradient(to left, transparent 0%, black 8%);
+  -webkit-mask-composite: intersect;
+  mask-image:
+    linear-gradient(to bottom, transparent 0%, black 8%, black 85%, transparent 100%),
+    linear-gradient(to right, transparent 0%, black 8%),
+    linear-gradient(to left, transparent 0%, black 8%);
+  mask-composite: intersect;
+  filter: brightness(0.88) contrast(1.05) grayscale(100%);
+  transition: filter 0.7s ease-in-out;
+}
+
+.home-image-wrap img:hover {
+  filter: brightness(0.88) contrast(1.05) grayscale(0%);
+}
+
+
+
+.orbital-path {
+  position: absolute;
+  border: 1px dashed #484848;
+  border-radius: 50%;
+  pointer-events: none;
+  opacity: 0.2;
+}
+
+.orbital-line {
+  position: absolute;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(192, 238, 145, 0.2), transparent);
+  width: 100%;
+  pointer-events: none;
+}
+
+/* ─── DRAGON CURSOR & PARTICLES ─── */
+body.hide-native-cursor,
+body.hide-native-cursor * {
+  cursor: none !important;
+}
+
+.dragon-particle {
+  position: fixed;
+  border-radius: 50%;
+  pointer-events: none;
+  animation: particle-fade-out 1s cubic-bezier(0.25, 1, 0.5, 1) forwards;
+  z-index: 999997;
+}
+
+@keyframes particle-fade-out {
+  0% {
+    opacity: 0.8;
+    transform: translate(0, 0) scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: translate(var(--tx), var(--ty)) scale(0);
+  }
+}
+
+.dragon-ghost {
+  position: fixed;
+  width: 60px;
+  height: 60px;
+  margin-left: -30px;
+  margin-top: -30px;
+  background-image: url('./assets/cursor.png');
+  background-size: contain;
+  background-repeat: no-repeat;
+  background-position: center;
+  pointer-events: none;
+  z-index: 999996;
+  opacity: 0.3;
+  animation: ghost-fade 0.4s ease-out forwards;
+}
+
+@keyframes ghost-fade {
+  to {
+    opacity: 0;
+    transform: scale(0.5);
+  }
+}
+
+
+/* ─── LOADING SCREEN TYPING ─── */
+#typing-name::after {
+  content: "ANIRUDH CHITTIMILLA";
+  animation: typing 3.0s steps(20, end) forwards;
+  display: inline-block;
+  white-space: nowrap;
+  overflow: hidden;
+  border-right: 2px solid #ff8a7a;
+}
+
+@keyframes typing {
+  from { width: 0; border-right-color: #ff8a7a; }
+  to { width: 100%; border-right-color: transparent; }
+}
+
+@keyframes loading-bar {
+  0% { width: 0; }
+  100% { width: 100%; }
+}
+
+#mobile-line1::after {
+  content: "ANIRUDH";
+  animation: typingLine1 1.4s steps(8, end) forwards;
+  display: inline-block;
+  white-space: nowrap;
+  overflow: hidden;
+  border-right: 2px solid #ff8a7a;
+}
+
+#mobile-line2::after {
+  content: "CHITTIMILLA";
+  animation: typingLine2 1.8s steps(13, end) 1.4s forwards;
+  display: inline-block;
+  white-space: nowrap;
+  overflow: hidden;
+  width: 0;
+  border-right: 2px solid #c0ee91;
+}
+
+@keyframes typingLine1 {
+  from { width: 0; border-right-color: #ff8a7a; }
+  to { width: 100%; border-right-color: transparent; }
+}
+
+@keyframes typingLine2 {
+  from { width: 0; border-right-color: #c0ee91; }
+  to { width: 100%; border-right-color: transparent; }
+}
+
+/* ─── FLOATING ANIMATIONS ─── */
+@keyframes float {
+
+  0%,
+  100% {
+    transform: translateY(0px) rotate(0deg);
+  }
+
+  50% {
+    transform: translateY(-20px) rotate(1deg);
+  }
+}
+
+@keyframes floatAlt {
+
+  0%,
+  100% {
+    transform: translateY(0px) rotate(0deg);
+  }
+
+  50% {
+    transform: translateY(-15px) rotate(-1deg);
+  }
+}
+
+@keyframes pulse-glow {
+
+  0%,
+  100% {
+    filter: drop-shadow(0 0 10px currentColor);
+    transform: scale(1);
+  }
+
+  50% {
+    filter: drop-shadow(0 0 20px currentColor);
+    transform: scale(1.05);
+  }
+}
+
+@keyframes morph {
+
+  0%,
+  100% {
+    border-radius: 60% 40% 30% 70% / 60% 30% 70% 40%;
+  }
+
+  50% {
+    border-radius: 30% 60% 70% 40% / 40% 60% 30% 70%;
+  }
+}
+
+@keyframes orbit {
+  from {
+    transform: rotate(0deg) translateX(80px) rotate(0deg);
+  }
+
+  to {
+    transform: rotate(360deg) translateX(80px) rotate(-360deg);
+  }
+}
+
+@keyframes shimmer {
+
+  0%,
+  100% {
+    background-position: -1000px 0;
+  }
+
+  100% {
+    background-position: 1000px 0;
+  }
+}
+
+@keyframes slide-in-left {
+  from {
+    transform: translateX(-100px);
+    opacity: 0;
+  }
+
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+@keyframes slide-in-right {
+  from {
+    transform: translateX(100px);
+    opacity: 0;
+  }
+
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+/* ─── ELEMENT MOVEMENT CLASSES ─── */
+.float-element {
+  animation: float 5s ease-in-out infinite;
+}
+
+.float-alt {
+  animation: floatAlt 6s ease-in-out infinite;
+}
+
+.pulse-glow {
+  animation: pulse-glow 2s ease-in-out infinite;
+}
+
+.morph-shape {
+  animation: morph 6s ease-in-out infinite;
+}
+
+.orbit-element {
+  animation: orbit 8s linear infinite;
+}
+
+.shimmer-effect {
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+  background-size: 1000px 100%;
+  animation: shimmer 3s infinite;
+}
+
+.slide-in {
+  animation: slide-in-left 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+}
+
+.delay-1 {
+  animation-delay: 0.1s;
+}
+
+.delay-2 {
+  animation-delay: 0.2s;
+}
+
+.delay-3 {
+  animation-delay: 0.3s;
+}
+
+.delay-4 {
+  animation-delay: 0.4s;
+}
+
+/* ─── BACKGROUND STAR PARTICLES ─── */
+#particle-bg {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 0;
+  pointer-events: none;
+  opacity: 0.7;
+}
+
+main,
+section,
+footer {
+  position: relative;
+  z-index: 2;
+}
+
+#page-content {
+  overflow: visible !important;
+  -webkit-overflow-scrolling: unset;
+}
+
+/* ─── DARK TORCH LIGHT TRANSITION ─── */
+#torch-transition {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 999999;
+  overflow: hidden;
+}
+
+#torch-transition .blob {
+  position: absolute;
+  top: 50%;
+  width: 900px;
+  height: 900px;
+  transform: translateY(-50%) scale(0.6);
+  border-radius: 50%;
+  filter: blur(70px);
+  opacity: 0;
+  /* Increased to 1.4 s (was 1.2 s) for a smoother, more fluid transition */
+  transition: all 1.4s cubic-bezier(0.7, 0, 0.2, 1);
+  pointer-events: none;
+}
+
+#torch-transition .left {
+  left: -300px;
+  background: radial-gradient(circle,
+      rgba(255, 142, 127, 0.45) 0%,
+      rgba(255, 142, 127, 0.25) 35%,
+      rgba(255, 142, 127, 0.1) 60%,
+      transparent 75%);
+}
+
+#torch-transition .right {
+  right: -300px;
+  background: radial-gradient(circle,
+      rgba(192, 238, 145, 0.45) 0%,
+      rgba(192, 238, 145, 0.25) 35%,
+      rgba(192, 238, 145, 0.1) 60%,
+      transparent 75%);
+}
+
+#torch-transition.active .blob {
+  opacity: 1;
+  transform: translateY(-50%) scale(1.6);
+}
+
+#torch-transition.active .blob.left {
+  animation: dissolveLeft 1.2s ease forwards;
+}
+
+#torch-transition.active .blob.right {
+  animation: dissolveRight 1.2s ease forwards;
+}
+
+/* Slightly longer dissolve (1.2 s was 1 s) → smoother blink */
+@keyframes dissolveLeft {
+  0% {
+    transform: translateY(-50%) scale(0.6);
+    opacity: 0;
+  }
+
+  40% {
+    transform: translateY(-50%) scale(1.5);
+    opacity: 1;
+  }
+
+  100% {
+    transform: translateY(-50%) scale(2.0);
+    opacity: 0;
+  }
+}
+
+@keyframes dissolveRight {
+  0% {
+    transform: translateY(-50%) scale(0.6);
+    opacity: 0;
+  }
+
+  40% {
+    transform: translateY(-50%) scale(1.5);
+    opacity: 1;
+  }
+
+  100% {
+    transform: translateY(-50%) scale(2.0);
+    opacity: 0;
+  }
+}
+
+/* ─── LOADING PARTICLES ─── */
+#loading-particles {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 1;
+  pointer-events: none;
+  opacity: 0.5;
+  filter: blur(0.5px);
+  mix-blend-mode: screen;
+}
+
+/* ─── PAGE BLUR WHEN MENU OPENS ─── */
+.page-blur {
+  transition: opacity 0.4s ease;
+  opacity: 0.4;
+}
+
+/* ─── LOADING TEXT MOBILE FIX ─── */
+@media (max-width: 768px) {
+  #loading-screen h1 {
+    font-size: 28px !important;
+  }
+
+  #loading-screen p {
+    font-size: 12px !important;
+  }
+}
+
+/* Prevent layout breaking on mobile */
+html,
+body {
+  overflow-x: hidden;
+}
+
+
+
+/* ─── MOBILE SCROLL FREEZE FIXES (ALL PAGES) ─── */
+@media (max-width: 768px) {
+
+
+  .card,
+  .project-item,
+  .skill-card {
+    will-change: auto !important;
+    transform: none !important;
+    -webkit-transform: none !important;
+  }
+
+  .home-image-wrap,
+  .home-image-bg {
+    will-change: auto !important;
+  }
+
+  #page-content {
+    min-height: auto !important;
+    overflow: visible !important;
+  }
+
+  /* Remove backdrop-blur on scrollable content — keep on fixed elements */
+  [class*="backdrop-blur"] {
+    -webkit-backdrop-filter: none !important;
+    backdrop-filter: none !important;
+  }
+
+  nav[class*="backdrop-blur"],
+  #mobile-menu[class*="backdrop-blur"],
+  #menu-backdrop[class*="backdrop-blur"] {
+    -webkit-backdrop-filter: blur(12px) !important;
+    backdrop-filter: blur(12px) !important;
+  }
+}
+
+/* ─── LOADING SCREEN ─── */
+/*
+   Extended timing (was 3.5 s fade-out, now 4.2 s) gives the typing animation
+   room to breathe and makes the reveal feel premium rather than rushed.
+   The loading-bar CSS animation is extended to match in the inline <style>
+   block inside index.html — that block references a 3.5 s duration.
+   We override the fade-out here; the bar animation lives in index.html's
+   <style> tag and must be updated there to stay in sync.
+*/
+#loading-screen {
+  opacity: 1;
+  /* Smooth cubic-ease-out for the fade (was linear) */
+  animation: fade-out-screen 1.2s cubic-bezier(0.4, 0, 0.2, 1) 4.0s forwards;
+  pointer-events: auto;
+}
+
+@keyframes fade-out-screen {
+  0% {
+    opacity: 1;
+    visibility: visible;
+    pointer-events: auto;
+  }
+
+  100% {
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+  }
+}
+
+/* Sub-title fade-in (extended from 1 s → 1.4 s, delayed 2 s → 2.2 s) */
+#loading-sub {
+  animation: fade-in-sub 1.4s ease-out 2.2s forwards;
+  opacity: 0;
+}
+
+@keyframes fade-in-sub {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+#loading-screen.quick-mode {
+  transition: opacity 1.5s ease;
+}
+
+#loading-screen.quick-mode h2,
+#loading-screen.quick-mode #mobile-line1,
+#loading-screen.quick-mode #mobile-line2 {
+  animation: none !important;
+}
+
+#loading-screen.quick-mode #loading-sub {
+  opacity: 1 !important;
+}
+
+@media (max-width: 768px) {
+
+  /* FIX 1: Kill all pulse animations on large decorative circles */
+  .rounded-full[class*="animate-"],
+  .rounded-full[class*="border"][class*="animate"] {
+    animation: none !important;
+    will-change: auto !important;
+    transform: none !important;
+  }
+
+  /* FIX 2: Remove scale transform from preview image */
+  .aspect-video img {
+    transform: none !important;
+    will-change: auto !important;
+    transition: opacity 0.7s ease, filter 0.7s ease !important;
+  }
+
+  .aspect-video {
+    will-change: auto !important;
+    transform: none !important;
+    -webkit-transform: none !important;
+  }
+
+  /* FIX 3: Allow touch scroll through overflow:hidden sections */
+  .min-h-\[400px\],
+  .min-h-\[500px\] {
+    overflow: visible !important;
+  }
+
+  /* FIX 4: Prevent main from blocking scroll dispatch */
+  main.relative {
+    overflow: visible !important;
+  }
+
+  /* FIX 5: Remove group-hover scale pre-allocation */
+  .group:hover .group-hover\:scale-\[1\.02\] {
+    transform: none !important;
+  }
+
+  /* FIX 6: Strip backdrop-blur from non-fixed page elements
+     to eliminate GPU compositing overhead on mobile scroll.
+     nav/menu/backdrop retain their blur via the rule above.    */
+  main [class*="backdrop-blur"],
+  section [class*="backdrop-blur"],
+  footer [class*="backdrop-blur"] {
+    -webkit-backdrop-filter: none !important;
+    backdrop-filter: none !important;
+  }
+}
