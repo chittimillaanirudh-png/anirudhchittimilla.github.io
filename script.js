@@ -322,57 +322,147 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 });
 
-// ─── BACKGROUND STAR PARTICLES ─────────────────────────────
+// ─── ADVANCED INTERACTIVE PARTICLE BACKGROUND ─────────────────────────────
 document.addEventListener("DOMContentLoaded", () => {
     const canvas = document.getElementById("particle-bg");
     if (!canvas) return;
     const ctx = canvas.getContext("2d");
 
+    let width, height, centerX, centerY;
     function resizeCanvas() {
-        canvas.width = window.innerWidth;
-        canvas.height = window.innerHeight;
+        width = canvas.width = window.innerWidth;
+        height = canvas.height = window.innerHeight;
+        centerX = width / 2;
+        centerY = height / 2;
     }
     resizeCanvas();
     window.addEventListener("resize", resizeCanvas);
 
     let particles = [];
-    const numParticles = window.innerWidth < 768 ? 100 : 300;
-    let mouse = { x: null, y: null, radius: 120 };
-    window.addEventListener("mousemove", e => { mouse.x = e.clientX; mouse.y = e.clientY; });
+    const colors = ["#87b652", "#df6b5d"];
+    let mouse = { x: null, y: null, active: false, radius: 150 };
+    let ripple = { active: false, x: 0, y: 0, radius: 0, maxRadius: 0, speed: 12 };
+
+    window.addEventListener("mousemove", e => {
+        mouse.x = e.clientX;
+        mouse.y = e.clientY;
+        mouse.active = true;
+    });
+
+    window.addEventListener("mouseleave", () => mouse.active = false);
+
+    window.addEventListener("click", e => {
+        ripple.x = e.clientX;
+        ripple.y = e.clientY;
+        ripple.radius = 0;
+        ripple.maxRadius = Math.max(width, height) * 1.5;
+        ripple.active = true;
+    });
 
     class Particle {
-        constructor() {
-            this.x = Math.random() * canvas.width;
-            this.y = Math.random() * canvas.height;
-            this.size = Math.random() * 1.5 + 0.5;
-            this.baseSize = this.size;
-            this.speedX = Math.random() * 0.4 - 0.2;
-            this.speedY = Math.random() * 0.4 - 0.2;
-            this.color = Math.random() > 0.5 ? "#ff8e7f" : "#c0ee91";
-            this.opacity = Math.random() * 0.4 + 0.2;
-        }
-        update() {
-            this.x += this.speedX;
-            this.y += this.speedY;
-            if (this.x > canvas.width) this.x = 0;
-            if (this.x < 0) this.x = canvas.width;
-            if (this.y > canvas.height) this.y = 0;
-            if (this.y < 0) this.y = canvas.height;
-
-            if (mouse.x !== null) {
-                const dx = this.x - mouse.x, dy = this.y - mouse.y;
-                const dist = Math.sqrt(dx * dx + dy * dy);
-                this.size = dist < mouse.radius ? this.baseSize + 1.5 : this.baseSize;
-                this.opacity = dist < mouse.radius ? 0.9 : 0.4;
+        constructor(type) {
+            this.type = type; // 0 = outer ring, 1 = inner ring, 2 = background
+            this.color = colors[Math.floor(Math.random() * colors.length)];
+            
+            if (this.type === 0) {
+                this.baseRadius = 250 + (Math.random() * 60 - 30);
+                this.angle = Math.random() * Math.PI * 2;
+                this.speed = (Math.random() * 0.002 + 0.003); 
+                // Much smaller size, like dots
+                this.baseSize = Math.random() * 0.8 + 0.4;
+            } else if (this.type === 1) {
+                this.baseRadius = 150 + (Math.random() * 40 - 20);
+                this.angle = Math.random() * Math.PI * 2;
+                this.speed = -(Math.random() * 0.0015 + 0.002);
+                this.baseSize = Math.random() * 0.6 + 0.3;
+            } else {
+                this.x = Math.random() * width;
+                this.y = Math.random() * height;
+                this.vx = (Math.random() - 0.5) * 0.2;
+                this.vy = (Math.random() - 0.5) * 0.2;
+                this.baseSize = Math.random() * 0.8 + 0.3;
             }
+
+            this.currentX = 0;
+            this.currentY = 0;
+            this.offsetX = 0;
+            this.offsetY = 0;
+            this.glow = 0;
+            // Always visibly colored, but flat/dim
+            this.opacity = 0.6; 
         }
+
+        update() {
+            // Apply spring damping to offset
+            this.offsetX += (0 - this.offsetX) * 0.1;
+            this.offsetY += (0 - this.offsetY) * 0.1;
+            
+            // Base movement
+            if (this.type === 0 || this.type === 1) {
+                this.angle += this.speed;
+                const scale = width < 768 ? 0.6 : 1;
+                this.x = centerX + Math.cos(this.angle) * (this.baseRadius * scale);
+                this.y = centerY + Math.sin(this.angle) * (this.baseRadius * scale);
+            } else {
+                this.x += this.vx;
+                this.y += this.vy;
+                if (this.x < 0) this.x = width;
+                if (this.x > width) this.x = 0;
+                if (this.y < 0) this.y = height;
+                if (this.y > height) this.y = 0;
+            }
+
+            this.currentX = this.x + this.offsetX;
+            this.currentY = this.y + this.offsetY;
+
+            let targetOpacity = 0.6; // Keep base color opacity
+            let targetGlow = 0;
+
+            // Hover Interaction
+            if (mouse.active && mouse.x !== null) {
+                const dx = this.currentX - mouse.x;
+                const dy = this.currentY - mouse.y;
+                const dist = Math.sqrt(dx * dx + dy * dy);
+
+                if (dist < mouse.radius) {
+                    const force = (mouse.radius - dist) / mouse.radius;
+                    // Increased repulsion speed and distance
+                    this.offsetX += (dx / dist) * force * 15;
+                    this.offsetY += (dy / dist) * force * 15;
+                    targetOpacity = 1;
+                    targetGlow = 35; // Maximum neon-like intense glow when cursor approaches
+                }
+            }
+
+            // Ripple Interaction
+            if (ripple.active) {
+                const dx = this.currentX - ripple.x;
+                const dy = this.currentY - ripple.y;
+                const dist = Math.sqrt(dx * dx + dy * dy);
+                
+                // If particle is near the expanding ripple rim
+                const distanceToRim = Math.abs(dist - ripple.radius);
+                if (distanceToRim < 30) {
+                    const force = 1 - (distanceToRim / 30);
+                    this.offsetX += (dx / dist) * force * 12;
+                    this.offsetY += (dy / dist) * force * 12;
+                    targetOpacity = 1;
+                    targetGlow = 20;
+                }
+            }
+
+            // Smoothly transition opacity and glow
+            this.opacity += (targetOpacity - this.opacity) * 0.1;
+            this.glow += (targetGlow - this.glow) * 0.1;
+        }
+
         draw() {
             ctx.beginPath();
-            ctx.shadowBlur = 10;
+            ctx.shadowBlur = this.glow;
             ctx.shadowColor = this.color;
             ctx.fillStyle = this.color;
-            ctx.globalAlpha = this.opacity;
-            ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+            ctx.globalAlpha = Math.max(0, Math.min(1, this.opacity));
+            ctx.arc(this.currentX, this.currentY, this.baseSize, 0, Math.PI * 2);
             ctx.fill();
             ctx.globalAlpha = 1;
             ctx.shadowBlur = 0;
@@ -381,13 +471,29 @@ document.addEventListener("DOMContentLoaded", () => {
 
     function init() {
         particles = [];
-        for (let i = 0; i < numParticles; i++) particles.push(new Particle());
+        const isMobile = window.innerWidth < 768;
+        const countMultiplier = isMobile ? 0.4 : 1;
+        
+        for (let i = 0; i < Math.floor(550 * countMultiplier); i++) particles.push(new Particle(0));
+        for (let i = 0; i < Math.floor(300 * countMultiplier); i++) particles.push(new Particle(1));
+        // Fill 80%-90% of the screen by drastically increasing random background particles
+        for (let i = 0; i < Math.floor(2000 * countMultiplier); i++) particles.push(new Particle(2));
     }
+
     function animate() {
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        ctx.clearRect(0, 0, width, height);
+
+        if (ripple.active) {
+            ripple.radius += ripple.speed;
+            if (ripple.radius > ripple.maxRadius) {
+                ripple.active = false;
+            }
+        }
+
         particles.forEach(p => { p.update(); p.draw(); });
         requestAnimationFrame(animate);
     }
+    
     init();
     animate();
 });
