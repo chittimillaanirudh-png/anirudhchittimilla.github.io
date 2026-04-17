@@ -207,8 +207,8 @@ document.addEventListener("DOMContentLoaded", () => {
     });
 
     (function animateFollower() {
-        followerX += (mouseX - followerX) * 0.12;
-        followerY += (mouseY - followerY) * 0.12;
+        followerX += (mouseX - followerX) * 0.35;
+        followerY += (mouseY - followerY) * 0.35;
         follower.style.left = followerX + 'px';
         follower.style.top = followerY + 'px';
         requestAnimationFrame(animateFollower);
@@ -424,7 +424,7 @@ document.addEventListener("DOMContentLoaded", () => {
             this.currentX = this.x + this.offsetX;
             this.currentY = this.y + this.offsetY;
 
-            let targetOpacity = 0.6; // Keep base color opacity
+            let targetOpacity = 0.4; // Slightly dimmer base so the hover glow pops out way more
             let targetGlow = 0;
 
             // Hover Interaction
@@ -439,7 +439,7 @@ document.addEventListener("DOMContentLoaded", () => {
                     this.offsetX += (dx / dist) * force * 15;
                     this.offsetY += (dy / dist) * force * 15;
                     targetOpacity = 1;
-                    targetGlow = 45; // Extreme maximum neon-like glow
+                    targetGlow = 20; // Concentrated, punchy neon glow that won't wash out
                 }
             }
 
@@ -456,23 +456,38 @@ document.addEventListener("DOMContentLoaded", () => {
                     this.offsetX += (dx / dist) * force * 12;
                     this.offsetY += (dy / dist) * force * 12;
                     targetOpacity = 1;
-                    targetGlow = 20;
+                    targetGlow = 25;
                 }
             }
 
             // Smoothly transition opacity and glow
             this.opacity += (targetOpacity - this.opacity) * 0.1;
             this.glow += (targetGlow - this.glow) * 0.1;
+            
+            // CRITICAL PERFORMANCE FIX: explicitly snap glow to 0. 
+            // Avoids computing sub-pixel shadow blur for thousands of dots every frame.
+            if (this.glow < 0.5) this.glow = 0;      
         }
 
         draw() {
             ctx.beginPath();
-            ctx.shadowBlur = this.glow;
-            ctx.shadowColor = this.color;
+            
+            // Only apply heavy shadow operations if the particle is actually glowing
+            if (this.glow > 0) {
+                ctx.shadowBlur = this.glow;
+                ctx.shadowColor = this.color;
+            } else {
+                ctx.shadowBlur = 0;
+            }
+            
             ctx.fillStyle = this.color;
             ctx.globalAlpha = Math.max(0, Math.min(1, this.opacity));
+            
+            // Draw particle with constant physical size, purely increasing its intense visual color/glow
             ctx.arc(this.currentX, this.currentY, this.baseSize, 0, Math.PI * 2);
             ctx.fill();
+            
+            // Reset for safety
             ctx.globalAlpha = 1;
             ctx.shadowBlur = 0;
         }
@@ -483,9 +498,8 @@ document.addEventListener("DOMContentLoaded", () => {
         const isMobile = window.innerWidth < 768;
         const countMultiplier = isMobile ? 0.4 : 1;
         
-        for (let i = 0; i < Math.floor(550 * countMultiplier); i++) particles.push(new Particle(0));
-        for (let i = 0; i < Math.floor(300 * countMultiplier); i++) particles.push(new Particle(1));
-        // Fill 80%-90% of the screen by drastically increasing random background particles
+        for (let i = 0; i < Math.floor(850 * countMultiplier); i++) particles.push(new Particle(0));
+        for (let i = 0; i < Math.floor(600 * countMultiplier); i++) particles.push(new Particle(1));
         for (let i = 0; i < Math.floor(2000 * countMultiplier); i++) particles.push(new Particle(2));
     }
 
@@ -559,18 +573,18 @@ document.addEventListener("DOMContentLoaded", () => {
                 this.baseRadius = 250 + (Math.random() * 60 - 30);
                 this.angle = Math.random() * Math.PI * 2;
                 this.speed = (Math.random() * 0.002 + 0.003); 
-                this.baseSize = Math.random() * 0.8 + 0.4;
+                this.baseSize = Math.random() * 0.8 + 0.5; // Slightly larger bases to catch glow
             } else if (this.type === 1) {
                 this.baseRadius = 150 + (Math.random() * 40 - 20);
                 this.angle = Math.random() * Math.PI * 2;
                 this.speed = -(Math.random() * 0.0015 + 0.002);
-                this.baseSize = Math.random() * 0.6 + 0.3;
+                this.baseSize = Math.random() * 0.6 + 0.4;
             } else {
                 this.x = Math.random() * width;
                 this.y = Math.random() * height;
                 this.vx = (Math.random() - 0.5) * 1.5;
                 this.vy = (Math.random() - 0.5) * 1.5;
-                this.baseSize = Math.random() * 0.8 + 0.3;
+                this.baseSize = Math.random() * 0.8 + 0.4;
             }
 
             this.currentX = 0;
@@ -602,7 +616,7 @@ document.addEventListener("DOMContentLoaded", () => {
             this.currentX = this.x + this.offsetX;
             this.currentY = this.y + this.offsetY;
 
-            let targetOpacity = 0.6;
+            let targetOpacity = 0.4; // Slightly dimmer base so the hover glow pops out way more
             let targetGlow = 0;
 
             if (mouse.active && mouse.x !== null && !window.__AC_CURSOR_HOVERING_ELEMENT) {
@@ -615,7 +629,7 @@ document.addEventListener("DOMContentLoaded", () => {
                     this.offsetX += (dx / dist) * force * 15;
                     this.offsetY += (dy / dist) * force * 15;
                     targetOpacity = 1;
-                    targetGlow = 45;
+                    targetGlow = 20; // Concentrated, punchy neon glow that won't wash out
                 }
             }
 
@@ -636,16 +650,30 @@ document.addEventListener("DOMContentLoaded", () => {
 
             this.opacity += (targetOpacity - this.opacity) * 0.1;
             this.glow += (targetGlow - this.glow) * 0.1;
+            
+            // CRITICAL PERFORMANCE FIX: explicitly snap glow to 0. 
+            if (this.glow < 0.5) this.glow = 0;      
         }
 
         draw() {
             ctx.beginPath();
-            ctx.shadowBlur = this.glow;
-            ctx.shadowColor = this.color;
+            
+            // Only apply heavy shadow operations if the particle is actually glowing
+            if (this.glow > 0) {
+                ctx.shadowBlur = this.glow;
+                ctx.shadowColor = this.color;
+            } else {
+                ctx.shadowBlur = 0;
+            }
+            
             ctx.fillStyle = this.color;
             ctx.globalAlpha = Math.max(0, Math.min(1, this.opacity));
+            
+            // Draw particle with constant physical size, using intense glow for the visual pop
             ctx.arc(this.currentX, this.currentY, this.baseSize, 0, Math.PI * 2);
             ctx.fill();
+            
+            // Reset for safety
             ctx.globalAlpha = 1;
             ctx.shadowBlur = 0;
         }
@@ -656,8 +684,8 @@ document.addEventListener("DOMContentLoaded", () => {
         const isMobile = window.innerWidth < 768;
         const countMultiplier = isMobile ? 0.4 : 1;
         
-        for (let i = 0; i < Math.floor(550 * countMultiplier); i++) particles.push(new Particle(0));
-        for (let i = 0; i < Math.floor(300 * countMultiplier); i++) particles.push(new Particle(1));
+        for (let i = 0; i < Math.floor(850 * countMultiplier); i++) particles.push(new Particle(0));
+        for (let i = 0; i < Math.floor(600 * countMultiplier); i++) particles.push(new Particle(1));
         for (let i = 0; i < Math.floor(2000 * countMultiplier); i++) particles.push(new Particle(2));
     }
 

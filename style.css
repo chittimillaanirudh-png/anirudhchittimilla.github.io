@@ -415,9 +415,7 @@ footer {
   height: 100%;
   z-index: 1;
   pointer-events: none;
-  opacity: 0.5;
-  filter: blur(0.5px);
-  mix-blend-mode: screen;
+  opacity: 0.7;
 }
 
 /* ─── PAGE BLUR WHEN MENU OPENS ─── */
