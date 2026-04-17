@@ -496,11 +496,12 @@ document.addEventListener("DOMContentLoaded", () => {
     function init() {
         particles = [];
         const isMobile = window.innerWidth < 768;
-        const countMultiplier = isMobile ? 0.4 : 1;
+        // High density count optimized up to a stable limit
+        const countMultiplier = isMobile ? 0.35 : 1;
         
-        for (let i = 0; i < Math.floor(850 * countMultiplier); i++) particles.push(new Particle(0));
-        for (let i = 0; i < Math.floor(600 * countMultiplier); i++) particles.push(new Particle(1));
-        for (let i = 0; i < Math.floor(2000 * countMultiplier); i++) particles.push(new Particle(2));
+        for (let i = 0; i < Math.floor(650 * countMultiplier); i++) particles.push(new Particle(0));
+        for (let i = 0; i < Math.floor(450 * countMultiplier); i++) particles.push(new Particle(1));
+        for (let i = 0; i < Math.floor(1000 * countMultiplier); i++) particles.push(new Particle(2));
     }
 
     function animate() {
@@ -682,13 +683,14 @@ document.addEventListener("DOMContentLoaded", () => {
     function init() {
         particles = [];
         const isMobile = window.innerWidth < 768;
-        const countMultiplier = isMobile ? 0.4 : 1;
+        const countMultiplier = isMobile ? 0.3 : 1;
         
-        for (let i = 0; i < Math.floor(850 * countMultiplier); i++) particles.push(new Particle(0));
-        for (let i = 0; i < Math.floor(600 * countMultiplier); i++) particles.push(new Particle(1));
-        for (let i = 0; i < Math.floor(2000 * countMultiplier); i++) particles.push(new Particle(2));
+        for (let i = 0; i < Math.floor(350 * countMultiplier); i++) particles.push(new Particle(0));
+        for (let i = 0; i < Math.floor(200 * countMultiplier); i++) particles.push(new Particle(1));
+        for (let i = 0; i < Math.floor(700 * countMultiplier); i++) particles.push(new Particle(2));
     }
 
+    let animId;
     function animate() {
         ctx.clearRect(0, 0, width, height);
 
@@ -700,11 +702,19 @@ document.addEventListener("DOMContentLoaded", () => {
         }
 
         particles.forEach(p => { p.update(); p.draw(); });
-        requestAnimationFrame(animate);
+        animId = requestAnimationFrame(animate);
     }
     
     init();
     animate();
+
+    // PERFORMANCE FIX: stop the animation after the loading screen completes
+    // The loading screen CSS animation duration is 4s fading + 1.2s delay etc.
+    setTimeout(() => {
+        cancelAnimationFrame(animId);
+        particles = []; // free memory
+        ctx.clearRect(0, 0, width, height);
+    }, 5500); 
 });
 
 // ─── MOBILE MENU ─────────────────────────────────────────────
