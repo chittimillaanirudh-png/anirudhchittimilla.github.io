@@ -175,7 +175,7 @@ document.addEventListener("DOMContentLoaded", () => {
     // The CSS animation duration is extended in style.css for a smoother feel.
 });
 
-// ─── ADVANCED CURSOR ────────────────────────────────────────
+// ─── BLACK HOLE CURSOR STATE DETECTOR ───────────────────────
 document.addEventListener("DOMContentLoaded", () => {
     const isTouchDevice =
         'ontouchstart' in window ||
@@ -184,51 +184,15 @@ document.addEventListener("DOMContentLoaded", () => {
 
     if (isTouchDevice) return;
 
-    if (!document.querySelector('.cursor')) {
-        const cursorEl = document.createElement('div');
-        cursorEl.className = 'cursor';
-        const followerEl = document.createElement('div');
-        followerEl.className = 'cursor-follower';
-        document.body.appendChild(cursorEl);
-        document.body.appendChild(followerEl);
-    }
-
-    const cursor = document.querySelector('.cursor');
-    const follower = document.querySelector('.cursor-follower');
-    document.body.classList.add('custom-cursor-active');
-
-    let mouseX = 0, mouseY = 0, followerX = 0, followerY = 0;
-
-    document.addEventListener('mousemove', e => {
-        mouseX = e.clientX;
-        mouseY = e.clientY;
-        cursor.style.left = mouseX + 'px';
-        cursor.style.top = mouseY + 'px';
-    });
-
-    (function animateFollower() {
-        followerX += (mouseX - followerX) * 0.35;
-        followerY += (mouseY - followerY) * 0.35;
-        follower.style.left = followerX + 'px';
-        follower.style.top = followerY + 'px';
-        requestAnimationFrame(animateFollower);
-    })();
-
+    window.__AC_CURSOR_HOVERING_ELEMENT = false;
     document.querySelectorAll('a, button, .social-link, .skill-card, .btn-primary, .btn-outline, input, textarea, .card, [role="button"]').forEach(el => {
         el.addEventListener('mouseenter', () => { 
-            cursor.classList.add('hover'); 
-            follower.classList.add('hover');
             window.__AC_CURSOR_HOVERING_ELEMENT = true;
         });
         el.addEventListener('mouseleave', () => { 
-            cursor.classList.remove('hover'); 
-            follower.classList.remove('hover');
             window.__AC_CURSOR_HOVERING_ELEMENT = false;
         });
     });
-
-    document.addEventListener('mouseleave', () => { cursor.style.opacity = '0'; follower.style.opacity = '0'; });
-    document.addEventListener('mouseenter', () => { cursor.style.opacity = '1'; follower.style.opacity = '1'; });
 });
 
 // ─── SCROLL & HOVER ANIMATIONS ───────────────────────────────
@@ -351,6 +315,19 @@ document.addEventListener("DOMContentLoaded", () => {
     let mouse = { x: null, y: null, active: false, radius: 250 }; // increased react radius
     let ripple = { active: false, x: 0, y: 0, radius: 0, maxRadius: 0, speed: 12 };
 
+    const isTouchDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 0 || window.matchMedia("(pointer: coarse)").matches;
+    let cursorColorFloat = 0; // 0 = green, 1 = red
+    let cursorLerpX = null;
+    let cursorLerpY = null;
+    let baseRadius = 18;
+    let hoverRadius = 42;
+    let currentRadius = baseRadius;
+    let cursorAngle = 0;
+
+    if (!isTouchDevice) {
+        document.body.classList.add('custom-cursor-active');
+    }
+
     window.addEventListener("mousemove", e => {
         mouse.x = e.clientX;
         mouse.y = e.clientY;
@@ -427,19 +404,37 @@ document.addEventListener("DOMContentLoaded", () => {
             let targetOpacity = 0.4; // Slightly dimmer base so the hover glow pops out way more
             let targetGlow = 0;
 
-            // Hover Interaction
-            if (mouse.active && mouse.x !== null && !window.__AC_CURSOR_HOVERING_ELEMENT) {
-                const dx = this.currentX - mouse.x;
-                const dy = this.currentY - mouse.y;
-                const dist = Math.sqrt(dx * dx + dy * dy);
+            // Hover Interaction - Black Hole Gravitation
+            if (mouse.active && mouse.x !== null && !isTouchDevice) {
+                const cx = cursorLerpX !== null ? cursorLerpX : mouse.x;
+                const cy = cursorLerpY !== null ? cursorLerpY : mouse.y;
+                
+                const dx = this.currentX - cx;
+                const dy = this.currentY - cy;
+                const dist = Math.sqrt(dx * dx + dy * dy) || 1;
 
                 if (dist < mouse.radius) {
-                    const force = (mouse.radius - dist) / mouse.radius;
-                    // Increased repulsion speed and distance
-                    this.offsetX += (dx / dist) * force * 15;
-                    this.offsetY += (dy / dist) * force * 15;
-                    targetOpacity = 1;
-                    targetGlow = 20; // Concentrated, punchy neon glow that won't wash out
+                    if (dist < currentRadius + 2) {
+                        // Event horizon reached - Swallow particle and respawn far away
+                        this.x = Math.random() * width;
+                        this.y = Math.random() * height;
+                        this.offsetX = 0;
+                        this.offsetY = 0;
+                        this.currentX = this.x;
+                        this.currentY = this.y;
+                    } else {
+                        // Inward curve (Gravitational pull + Angular swirl)
+                        const force = Math.pow((mouse.radius - dist) / mouse.radius, 1.5); 
+                        // Pull inward towards center (attraction)
+                        this.offsetX -= (dx / dist) * force * 20;
+                        this.offsetY -= (dy / dist) * force * 20;
+                        // Swirl around tangentially
+                        this.offsetX += (-dy / dist) * force * 15;
+                        this.offsetY += (dx / dist) * force * 15;
+                        
+                        targetOpacity = 1; // Ignite as it gets drawn in
+                        targetGlow = 25;
+                    }
                 }
             }
 
@@ -499,8 +494,8 @@ document.addEventListener("DOMContentLoaded", () => {
         // High density count optimized up to a stable limit
         const countMultiplier = isMobile ? 0.35 : 1;
         
-        for (let i = 0; i < Math.floor(650 * countMultiplier); i++) particles.push(new Particle(0));
-        for (let i = 0; i < Math.floor(450 * countMultiplier); i++) particles.push(new Particle(1));
+        for (let i = 0; i < Math.floor(1235 * countMultiplier); i++) particles.push(new Particle(0));
+        for (let i = 0; i < Math.floor(855 * countMultiplier); i++) particles.push(new Particle(1));
         for (let i = 0; i < Math.floor(1000 * countMultiplier); i++) particles.push(new Particle(2));
     }
 
@@ -515,6 +510,81 @@ document.addEventListener("DOMContentLoaded", () => {
         }
 
         particles.forEach(p => { p.update(); p.draw(); });
+
+        if (mouse.active && mouse.x !== null) {
+            if (cursorLerpX === null) {
+                cursorLerpX = mouse.x;
+                cursorLerpY = mouse.y;
+            } else {
+                cursorLerpX += (mouse.x - cursorLerpX) * 0.35;
+                cursorLerpY += (mouse.y - cursorLerpY) * 0.35;
+            }
+        }
+        
+        // Color transition logic & radius lerping
+        const isHovering = window.__AC_CURSOR_HOVERING_ELEMENT;
+        cursorColorFloat += ((isHovering ? 1 : 0) - cursorColorFloat) * 0.15;
+        currentRadius += ((isHovering ? hoverRadius : baseRadius) - currentRadius) * 0.15;
+        cursorAngle += 0.05;
+
+        // Draw Realistic Black Hole Cursor
+        if (cursorLerpX !== null && !isTouchDevice) {
+            ctx.save();
+            const r = Math.round(192 + (255 - 192) * cursorColorFloat);
+            const g = Math.round(238 + (142 - 238) * cursorColorFloat);
+            const b = Math.round(145 + (127 - 145) * cursorColorFloat);
+            const ringColor = `rgb(${r}, ${g}, ${b})`;
+            
+            const time = Date.now() * 0.002;
+            const wobble = Math.sin(time) * 2;
+            
+            ctx.translate(cursorLerpX, cursorLerpY);
+            
+            // 1. Gravitational Lensing (Outer soft glow arcs)
+            ctx.beginPath();
+            ctx.arc(wobble * 0.5, -wobble * 0.5, currentRadius + 15 + wobble, 0, Math.PI * 2);
+            ctx.lineWidth = 2;
+            ctx.globalAlpha = 0.1 + (Math.sin(time) * 0.05);
+            ctx.strokeStyle = ringColor;
+            ctx.stroke();
+
+            // 2. Accretion Swirl (Dashed rotating layer)
+            ctx.rotate(cursorAngle * 0.5);
+            ctx.setLineDash([10, 15]);
+            ctx.lineDashOffset = -cursorAngle * 50;
+            ctx.beginPath();
+            ctx.arc(0, 0, currentRadius + 8, 0, Math.PI * 2);
+            ctx.lineWidth = 1;
+            ctx.globalAlpha = 0.3;
+            ctx.strokeStyle = ringColor;
+            ctx.stroke();
+            ctx.setLineDash([]);
+
+            // 3. Core Event Horizon
+            ctx.rotate(-cursorAngle * 0.5); // Reset rotation for core
+            ctx.beginPath();
+            ctx.arc(0, 0, currentRadius, 0, Math.PI * 2);
+            ctx.lineWidth = 3;
+            ctx.globalAlpha = 1.0;
+            ctx.shadowBlur = isHovering ? 45 : 25;
+            ctx.shadowColor = ringColor;
+            ctx.strokeStyle = ringColor;
+            ctx.stroke();
+
+            // 4. Photon Ring (Very thin bright inner edge with organic pulse)
+            ctx.beginPath();
+            ctx.arc(0, 0, currentRadius - 2 + (Math.sin(time * 2) * 0.5), 0, Math.PI * 2);
+            ctx.lineWidth = 0.8;
+            ctx.strokeStyle = "#ffffff";
+            ctx.globalAlpha = 0.6 + (Math.cos(time) * 0.2);
+            ctx.stroke();
+            
+            ctx.restore();
+            ctx.globalAlpha = 1.0;
+        }
+
+
+
         requestAnimationFrame(animate);
     }
     
@@ -617,20 +687,32 @@ document.addEventListener("DOMContentLoaded", () => {
             this.currentX = this.x + this.offsetX;
             this.currentY = this.y + this.offsetY;
 
-            let targetOpacity = 0.4; // Slightly dimmer base so the hover glow pops out way more
+            let targetOpacity = 0.4;
             let targetGlow = 0;
 
-            if (mouse.active && mouse.x !== null && !window.__AC_CURSOR_HOVERING_ELEMENT) {
+            // Black Hole Gravitation interaction for loading screen
+            if (mouse.active && mouse.x !== null) {
                 const dx = this.currentX - mouse.x;
                 const dy = this.currentY - mouse.y;
-                const dist = Math.sqrt(dx * dx + dy * dy);
+                const dist = Math.sqrt(dx * dx + dy * dy) || 1;
 
                 if (dist < mouse.radius) {
-                    const force = (mouse.radius - dist) / mouse.radius;
-                    this.offsetX += (dx / dist) * force * 15;
-                    this.offsetY += (dy / dist) * force * 15;
-                    targetOpacity = 1;
-                    targetGlow = 20; // Concentrated, punchy neon glow that won't wash out
+                    if (dist < 20) {
+                        // Swallow and respawn
+                        this.x = Math.random() * width;
+                        this.y = Math.random() * height;
+                        this.offsetX = 0;
+                        this.offsetY = 0;
+                    } else {
+                        // Inward curve (Gravitational pull + Angular swirl)
+                        const force = Math.pow((mouse.radius - dist) / mouse.radius, 1.5); 
+                        this.offsetX -= (dx / dist) * force * 15;
+                        this.offsetY -= (dy / dist) * force * 15;
+                        this.offsetX += (-dy / dist) * force * 10;
+                        this.offsetY += (dx / dist) * force * 10;
+                        targetOpacity = 1;
+                        targetGlow = 20;
+                    }
                 }
             }
 
@@ -685,9 +767,9 @@ document.addEventListener("DOMContentLoaded", () => {
         const isMobile = window.innerWidth < 768;
         const countMultiplier = isMobile ? 0.3 : 1;
         
-        for (let i = 0; i < Math.floor(350 * countMultiplier); i++) particles.push(new Particle(0));
-        for (let i = 0; i < Math.floor(200 * countMultiplier); i++) particles.push(new Particle(1));
-        for (let i = 0; i < Math.floor(700 * countMultiplier); i++) particles.push(new Particle(2));
+        for (let i = 0; i < Math.floor(1235 * countMultiplier); i++) particles.push(new Particle(0));
+        for (let i = 0; i < Math.floor(855 * countMultiplier); i++) particles.push(new Particle(1));
+        for (let i = 0; i < Math.floor(1000 * countMultiplier); i++) particles.push(new Particle(2));
     }
 
     let animId;
@@ -702,6 +784,7 @@ document.addEventListener("DOMContentLoaded", () => {
         }
 
         particles.forEach(p => { p.update(); p.draw(); });
+
         animId = requestAnimationFrame(animate);
     }
     
